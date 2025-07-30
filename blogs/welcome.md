@@ -60,6 +60,8 @@ Main software
 - Terminal: Kitty + tmux
 - IDE: Neovim + LazyVim
 
+- Browser: Firefox
+
 Main AI's
 
 - Assistant AI: gemini Flash 2.5
