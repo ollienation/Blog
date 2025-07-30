@@ -21,13 +21,13 @@ Even though we were born to late to explore the world, and to early to explore t
 
 ## Some side notes
 
-Since AI is on the rise it is tempting to use it to write this blog, but that wouldn't help me write better and also add to the already abundant amount of AI generated SLOB. I think there will be a period in the future where real skills will get more valuable as they start getting more rare although in the long term this will balance itself out again. Or maybe our idea of what skills are valuable will change, guess we'll see.
+Since AI is on the rise it is tempting to use it to write this blog, but that wouldn't help me write better and also add to the already abundant amount of AI generated content(read slob). I think there will be a period in the future where real skills will get more valuable as they start getting more rare although in the long term this will balance itself out again. Or maybe our idea of what skills are valuable will change, guess we'll see.
 
 So bear with me. Practice makes perfect, so expect improvement over time.
 
 ## 🧑‍💻Techstack
 
-A blog about tech wouldn't be complete without a techstack. Since I'm poor AF it's old, but it does the job.
+A blog about tech wouldn't be complete without a techstack. Since I'm chronically low on funds it's old, but it does the job.
 
 PC
 
