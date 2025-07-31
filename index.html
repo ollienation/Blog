@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Oliver's Personal Homepage</title>
+    <title>Oliver's Personal Blog</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -16,7 +16,9 @@
           </div>
           <nav class="nav">
             <a href="#home" class="nav-link">Home</a>
+            <a href="#about" class="nav-link">About</a>
             <a href="#blog" class="nav-link">Blog</a>
+            <a href="#contact" class="nav-link">Contact</a>
             <button
               class="theme-toggle"
               id="themeToggle"
@@ -62,18 +64,42 @@
 
     <!-- Hero Section -->
     <section id="home" class="hero">
+      <div class="hero-background"></div>
+      <div class="hero-particles"></div>
       <div class="hero-content">
-        <h1 class="hero-title">
-          Hi, I'm Oliver—welcome to my corner of the web
-        </h1>
-        <p class="hero-subtitle">
-          Junior software developer, tech enthusiast, and occasional blogger
-          sharing thoughts on tech, life, and everything in between.
+        <div class="hero-avatar">
+          <div class="avatar-ring"></div>
+          <div class="avatar-image">O</div>
+          <div class="security-badge">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <path d="M9 12l2 2 4-4"></path>
+            </svg>
+          </div>
+        </div>
+        <h1 class="hero-title">Hi, I'm Oliver</h1>
+        <div class="hero-subtitle">
+          <span class="typing-text"></span>
+          <span class="cursor">|</span>
+        </div>
+        <p class="hero-description">
+          Dreamer pur sang. I find joy in ideation, tech and sunshine🔆
         </p>
+        <div class="hero-cta">
+          <a href="#blog" class="btn btn--primary">Read My Blog</a>
+          <a href="#contact" class="btn btn--outline">Get In Touch</a>
+        </div>
         <button
           class="scroll-arrow"
           id="scrollArrow"
-          aria-label="Scroll to blog section"
+          aria-label="Scroll to content"
         >
           <svg
             width="24"
@@ -89,12 +115,38 @@
       </div>
     </section>
 
+    <!-- About Section -->
+    <section id="about" class="about-section">
+      <div class="container">
+        <div class="about-content">
+          <div class="about-text">
+            <h2>About Me</h2>
+            <p>
+              I'm a tech enthousiast exploring the digital landscape. I dabble
+              in some Python, JavaScript and AI technology. Currently, I work at
+              a Project scheduling company, where I support development and try
+              to accelerate AI adoption.
+            </p>
+            <div class="skills">
+              <div class="skill-tag">AWS</div>
+              <div class="skill-tag">Python</div>
+              <div class="skill-tag">JavaScript</div>
+              <div class="skill-tag">Docker</div>
+              <div class="skill-tag">Security</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Blog Section -->
     <section id="blog" class="blog-section">
       <div class="container">
         <div class="blog-header">
           <h2>Latest Posts</h2>
-          <p>Thoughts on technology, development, and digital life</p>
+          <p>
+            Here you'll find my thoughts on tech, life and everything inbetween
+          </p>
         </div>
         <div class="blog-grid" id="blogGrid">
           <!-- Blog posts will be rendered here -->
@@ -102,13 +154,92 @@
       </div>
     </section>
 
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+      <div class="container">
+        <div class="contact-content">
+          <h2>Get In Touch</h2>
+          <p>
+            Let's connect and discuss security, cloud infrastructure, or
+            technology.
+          </p>
+          <div class="contact-links">
+            <a
+              href="https://github.com/ollienation"
+              target="_blank"
+              class="contact-link"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                />
+              </svg>
+              GitHub
+            </a>
+            <a href="mailto:hello@imlosing.it" class="contact-link">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                ></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              Email
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Blog Modal -->
+    <div class="modal hidden" id="blogModal">
+      <div class="modal-backdrop" id="modalBackdrop"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <button class="modal-close" id="modalClose" aria-label="Close modal">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body" id="modalBody">
+          <!-- Blog post content will be inserted here -->
+        </div>
+      </div>
+    </div>
+
     <!-- Footer -->
     <footer class="footer">
       <div class="container">
-        <p>&copy; 2025 Oliver. All rights reserved.</p>
+        <p>
+          &copy; 2025 Oliver. All rights reserved. | Blog hosted on
+          <a href="https://github.com/ollienation/blog" target="_blank"
+            >GitHub</a
+          >
+        </p>
       </div>
     </footer>
 
     <script src="app.js"></script>
   </body>
 </html>
+
