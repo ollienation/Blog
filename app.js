@@ -1,494 +1,416 @@
-/* --- Data Source --- */
-const blogPosts = [
-  {
-    id: 1,
-    title: "Welcome to my blog 🌊",
-    excerpt:
-      "Born too late to explore the earth and too early for the stars, so I'm exploring what's here.",
-    content:
-      "# Building a Secure Personal Cloud with AWS and Cloudflare\n\nIn today's digital landscape, privacy and security are paramount. This comprehensive guide walks you through setting up a personal cloud infrastructure that prioritizes security without sacrificing functionality.\n\n## Architecture Overview\n\nOur setup consists of:\n- AWS EC2 instance for web hosting\n- Home server for media and file storage\n- Cloudflare Tunnels for secure connectivity\n- Multi-factor authentication via Cognito\n\n## Security Layers\n\n### 1. Network Security\n- All traffic routed through Cloudflare's edge network\n- Zero inbound ports on home router\n- DDoS protection and bot mitigation\n\n### 2. Application Security\n- Web Application Firewall (WAF)\n- Rate limiting on authentication endpoints\n- HTTPS everywhere with automatic certificate management\n\n### 3. Identity and Access Management\n- AWS Cognito for user management\n- Multi-factor authentication required\n- Session management with secure tokens\n\n## Implementation Steps\n\n1. **Set up the AWS environment**\n2. **Configure Cloudflare services**\n3. **Deploy security policies**\n4. **Test and monitor**\n\nThis setup provides enterprise-grade security for your personal digital assets while maintaining ease of use and management.",
-    date: "2024-12-15",
-    readTime: "8 min read",
-    tags: ["Introduction", "Techstack", "Personal"],
-    author: "Oliver",
-  },
-];
+import { blogPosts } from "./blogPosts.js";
+
+/* ---------------------- Global State ---------------------- */
+let currentTheme = "light";
+let isTypingAnimationRunning = false;
 
 /* ---------------------- Theme Switcher ---------------------- */
-let currentTheme = "light";
-
 function initTheme() {
-  const htmlEl = document.documentElement;
-  const themeToggle = document.getElementById("themeToggle");
+  try {
+    const htmlEl = document.documentElement;
+    const themeToggle = document.getElementById("themeToggle");
 
-  if (!themeToggle) {
-    console.error("Theme toggle button not found");
-    return;
-  }
-
-  const sunIcon = themeToggle.querySelector(".sun-icon");
-  const moonIcon = themeToggle.querySelector(".moon-icon");
-
-  if (!sunIcon || !moonIcon) {
-    console.error("Theme icons not found");
-    return;
-  }
-
-  // Get saved theme or use system preference
-  const savedTheme = localStorage.getItem("theme");
-  const systemPrefersDark = window.matchMedia(
-    "(prefers-color-scheme: dark)",
-  ).matches;
-  currentTheme = savedTheme || (systemPrefersDark ? "dark" : "light");
-
-  const updateIcons = () => {
-    if (currentTheme === "dark") {
-      sunIcon.classList.add("hidden");
-      moonIcon.classList.remove("hidden");
-    } else {
-      sunIcon.classList.remove("hidden");
-      moonIcon.classList.add("hidden");
+    if (!themeToggle) {
+      console.warn("Theme toggle button not found - theme switching disabled");
+      return;
     }
-  };
 
-  const toggleTheme = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    const sunIcon = themeToggle.querySelector(".sun-icon");
+    const moonIcon = themeToggle.querySelector(".moon-icon");
 
-    currentTheme = currentTheme === "light" ? "dark" : "light";
+    if (!sunIcon || !moonIcon) {
+      console.warn("Theme icons not found - using fallback");
+      // Continue with basic functionality even if icons are missing
+    }
+
+    // Get saved theme or use system preference
+    const savedTheme = localStorage.getItem("theme");
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+
+    currentTheme = savedTheme || (systemPrefersDark ? "dark" : "light");
+
+    const updateIcons = () => {
+      if (sunIcon && moonIcon) {
+        if (currentTheme === "dark") {
+          sunIcon.classList.add("hidden");
+          moonIcon.classList.remove("hidden");
+        } else {
+          sunIcon.classList.remove("hidden");
+          moonIcon.classList.add("hidden");
+        }
+      }
+    };
+
+    const toggleTheme = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      currentTheme = currentTheme === "light" ? "dark" : "light";
+      htmlEl.setAttribute("data-color-scheme", currentTheme);
+
+      try {
+        localStorage.setItem("theme", currentTheme);
+      } catch (error) {
+        console.warn("Could not save theme preference:", error);
+      }
+
+      updateIcons();
+      console.log("Theme switched to:", currentTheme);
+    };
+
+    // Apply initial theme
     htmlEl.setAttribute("data-color-scheme", currentTheme);
-
-    try {
-      localStorage.setItem("theme", currentTheme);
-    } catch (error) {
-      console.warn("Could not save theme preference:", error);
-    }
-
+    themeToggle.addEventListener("click", toggleTheme);
     updateIcons();
-    console.log("Theme switched to:", currentTheme);
-  };
 
-  // Apply initial theme
-  htmlEl.setAttribute("data-color-scheme", currentTheme);
-  themeToggle.addEventListener("click", toggleTheme);
-  updateIcons();
-
-  console.log("Theme initialized:", currentTheme);
+    console.log("Theme initialized:", currentTheme);
+  } catch (error) {
+    console.error("Theme initialization failed:", error);
+  }
 }
 
 /* ---------------------- Typing Animation ---------------------- */
 function initTypingAnimation() {
-  const typingText = document.querySelector(".typing-text");
-  if (!typingText) {
-    console.error("Typing text element not found");
-    return;
-  }
+  try {
+    const typingText = document.querySelector(".typing-text");
 
-  const phrases = ["Welcome!", "Ideation", "AI", "Software Development"];
-
-  let currentPhraseIndex = 0;
-  let currentCharIndex = 0;
-  let isDeleting = false;
-  const typingSpeed = 100;
-  const deletingSpeed = 50;
-  const pauseDuration = 2000;
-
-  function typeEffect() {
-    const currentPhrase = phrases[currentPhraseIndex];
-
-    if (isDeleting) {
-      typingText.textContent = currentPhrase.substring(0, currentCharIndex - 1);
-      currentCharIndex--;
-    } else {
-      typingText.textContent = currentPhrase.substring(0, currentCharIndex + 1);
-      currentCharIndex++;
+    if (!typingText) {
+      console.warn("Typing text element not found - animation disabled");
+      return;
     }
 
-    let nextDelay = isDeleting ? deletingSpeed : typingSpeed;
-
-    if (!isDeleting && currentCharIndex === currentPhrase.length) {
-      nextDelay = pauseDuration;
-      isDeleting = true;
-    } else if (isDeleting && currentCharIndex === 0) {
-      isDeleting = false;
-      currentPhraseIndex = (currentPhraseIndex + 1) % phrases.length;
+    if (isTypingAnimationRunning) {
+      console.log("Typing animation already running");
+      return;
     }
 
-    setTimeout(typeEffect, nextDelay);
-  }
+    const phrases = ["Welcome!", "Ideation", "AI", "Software Development"];
+    let currentPhraseIndex = 0;
+    let currentCharIndex = 0;
+    let isDeleting = false;
 
-  // Start typing animation after a brief delay
-  setTimeout(typeEffect, 1000);
-  console.log("Typing animation initialized");
+    const typingSpeed = 100;
+    const deletingSpeed = 50;
+    const pauseDuration = 2000;
+
+    function typeEffect() {
+      if (!isTypingAnimationRunning) return; // Allow stopping animation
+
+      const currentPhrase = phrases[currentPhraseIndex];
+
+      if (isDeleting) {
+        typingText.textContent = currentPhrase.substring(
+          0,
+          currentCharIndex - 1,
+        );
+        currentCharIndex--;
+      } else {
+        typingText.textContent = currentPhrase.substring(
+          0,
+          currentCharIndex + 1,
+        );
+        currentCharIndex++;
+      }
+
+      let nextDelay = isDeleting ? deletingSpeed : typingSpeed;
+
+      if (!isDeleting && currentCharIndex === currentPhrase.length) {
+        nextDelay = pauseDuration;
+        isDeleting = true;
+      } else if (isDeleting && currentCharIndex === 0) {
+        isDeleting = false;
+        currentPhraseIndex = (currentPhraseIndex + 1) % phrases.length;
+      }
+
+      setTimeout(typeEffect, nextDelay);
+    }
+
+    isTypingAnimationRunning = true;
+
+    // Start typing animation after a brief delay
+    setTimeout(typeEffect, 1000);
+    console.log("Typing animation initialized");
+  } catch (error) {
+    console.error("Typing animation initialization failed:", error);
+  }
 }
 
-/* ---------------------- Blog Functionality ---------------------- */
+/* ---------------------- Utility Functions ---------------------- */
 function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (error) {
+    console.warn("Date formatting failed for:", dateString);
+    return dateString; // Return original if formatting fails
+  }
 }
 
 function parseMarkdown(content) {
-  return content
-    .replace(/^# (.*$)/gim, "<h1>$1</h1>")
-    .replace(/^## (.*$)/gim, "<h2>$1</h2>")
-    .replace(/^### (.*$)/gim, "<h3>$1</h3>")
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    .replace(/`(.*?)`/g, "<code>$1</code>")
-    .replace(/^- (.*$)/gim, "<li>$1</li>")
-    .replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>")
-    .replace(/\n\n/g, "</p><p>")
-    .replace(/^(?!<[hul])/gm, "<p>")
-    .replace(/(?<!>)$/gm, "</p>")
-    .replace(/<p><\/p>/g, "");
+  try {
+    return content
+      .replace(/^# (.*$)/gim, "<h1>$1</h1>")
+      .replace(/^## (.*$)/gim, "<h2>$1</h2>")
+      .replace(/^### (.*$)/gim, "<h3>$1</h3>")
+      .replace(/^- (.*$)/gim, "<li>$1</li>")
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.*?)\*/g, "<em>$1</em>")
+      .replace(/`(.*?)`/g, "<code>$1</code>")
+      .replace(/\n\n/g, "</p><p>")
+      .replace(/^(?!<[hul]|<p>)/gm, "<p>")
+      .replace(/$/gm, "</p>")
+      .replace(/<p><\/p>/g, "")
+      .replace(/(<\/[hul]i?>)<p>/g, "$1")
+      .replace(/<\/p>(<[hul])/g, "$1");
+  } catch (error) {
+    console.error("Markdown parsing failed:", error);
+    return content; // Return original content if parsing fails
+  }
 }
 
+/* ---------------------- Blog Functionality ---------------------- */
 function renderBlogPosts() {
-  const grid = document.getElementById("blogGrid");
-  if (!grid) {
-    console.error("Blog grid not found");
-    return;
-  }
+  try {
+    const grid = document.getElementById("blogGrid");
 
-  blogPosts.forEach((post, idx) => {
-    const card = document.createElement("div");
-    card.className = "card-post";
-    card.style.transitionDelay = `${idx * 150}ms`;
-    card.setAttribute("data-post-id", post.id);
+    if (!grid) {
+      console.error("Blog grid element not found");
+      return;
+    }
 
-    const tagsHtml = post.tags
-      .map((tag) => `<span class="tag">${tag}</span>`)
-      .join("");
+    if (!blogPosts || !Array.isArray(blogPosts) || blogPosts.length === 0) {
+      console.warn("No blog posts available to render");
+      grid.innerHTML =
+        '<p class="no-posts">No blog posts available at the moment.</p>';
+      return;
+    }
 
-    card.innerHTML = `
-      <h3>${post.title}</h3>
-      <div class="post-meta">
-        <span>${formatDate(post.date)}</span>
-        <span>•</span>
-        <span>${post.readTime}</span>
-        <span>•</span>
-        <span>By ${post.author}</span>
-      </div>
-      <p>${post.excerpt}</p>
-      <div class="post-tags">
-        ${tagsHtml}
-      </div>
-    `;
+    // Clear existing content
+    grid.innerHTML = "";
 
-    card.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      openBlogModal(post);
-      console.log("Blog card clicked:", post.title);
+    blogPosts.forEach((post, idx) => {
+      try {
+        const card = document.createElement("div");
+        card.className = "card-post";
+        card.style.transitionDelay = `${idx * 150}ms`;
+        card.setAttribute("data-post-id", post.id);
+
+        // Safely generate tags HTML
+        const tagsHtml = (post.tags || [])
+          .map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`)
+          .join("");
+
+        card.innerHTML = `
+          <h3>${escapeHtml(post.title || "Untitled")}</h3>
+          <div class="post-meta">
+            <span>${formatDate(post.date || new Date().toISOString())}</span>
+            <span>${escapeHtml(post.readTime || "Unknown read time")}</span>
+          </div>
+          <p>${escapeHtml(post.excerpt || "No excerpt available")}</p>
+          <div class="post-tags">
+            ${tagsHtml}
+          </div>
+        `;
+
+        card.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openBlogModal(post);
+          console.log("Blog card clicked:", post.title);
+        });
+
+        grid.appendChild(card);
+
+        // Trigger animation after a brief delay
+        setTimeout(() => {
+          card.classList.add("visible");
+        }, idx * 100);
+      } catch (error) {
+        console.error("Error rendering blog post:", post, error);
+      }
     });
 
-    grid.appendChild(card);
-  });
-
-  console.log("Blog posts rendered:", blogPosts.length);
+    console.log("Blog posts rendered:", blogPosts.length);
+  } catch (error) {
+    console.error("Blog rendering failed:", error);
+  }
 }
 
 /* ---------------------- Blog Modal ---------------------- */
 function openBlogModal(post) {
-  const modal = document.getElementById("blogModal");
-  const modalBody = document.getElementById("modalBody");
+  try {
+    const modal = document.getElementById("blogModal");
+    const modalBody = document.getElementById("modalBody");
 
-  if (!modal || !modalBody) {
-    console.error("Modal elements not found");
-    return;
+    if (!modal || !modalBody) {
+      console.error("Modal elements not found");
+      return;
+    }
+
+    const tagsHtml = (post.tags || [])
+      .map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`)
+      .join("");
+
+    const contentHtml = parseMarkdown(post.content || "No content available");
+
+    modalBody.innerHTML = `
+      <article class="blog-post">
+        <header class="post-header">
+          <h1>${escapeHtml(post.title || "Untitled")}</h1>
+          <div class="post-meta">
+            <span class="post-date">${formatDate(post.date || new Date().toISOString())}</span>
+            <span class="post-read-time">${escapeHtml(post.readTime || "Unknown read time")}</span>
+            <span class="post-author">by ${escapeHtml(post.author || "Unknown")}</span>
+          </div>
+          <div class="post-tags">
+            ${tagsHtml}
+          </div>
+        </header>
+        <div class="post-content">
+          ${contentHtml}
+        </div>
+      </article>
+    `;
+
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden"; // Prevent background scrolling
+
+    console.log("Modal opened for:", post.title);
+  } catch (error) {
+    console.error("Modal opening failed:", error);
   }
-
-  const tagsHtml = post.tags
-    .map((tag) => `<span class="tag">${tag}</span>`)
-    .join("");
-  const contentHtml = parseMarkdown(post.content);
-
-  modalBody.innerHTML = `
-    <h1>${post.title}</h1>
-    <div class="post-meta">
-      <span>${formatDate(post.date)}</span>
-      <span>•</span>
-      <span>${post.readTime}</span>
-      <span>•</span>
-      <span>By ${post.author}</span>
-      <div class="post-tags" style="margin-left: auto;">
-        ${tagsHtml}
-      </div>
-    </div>
-    <div class="post-content">
-      ${contentHtml}
-    </div>
-  `;
-
-  modal.classList.remove("hidden");
-  document.body.style.overflow = "hidden";
-  console.log("Blog modal opened:", post.title);
 }
 
 function closeBlogModal() {
-  const modal = document.getElementById("blogModal");
-  if (!modal) {
-    console.error("Modal not found");
-    return;
-  }
+  try {
+    const modal = document.getElementById("blogModal");
 
-  modal.classList.add("hidden");
-  document.body.style.overflow = "";
-  console.log("Blog modal closed");
-}
-
-function initBlogModal() {
-  const modalClose = document.getElementById("modalClose");
-  const modalBackdrop = document.getElementById("modalBackdrop");
-
-  if (modalClose) {
-    modalClose.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeBlogModal();
-    });
-  }
-
-  if (modalBackdrop) {
-    modalBackdrop.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeBlogModal();
-    });
-  }
-
-  // Close modal with Escape key
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closeBlogModal();
+    if (modal) {
+      modal.classList.add("hidden");
+      document.body.style.overflow = ""; // Restore scrolling
+      console.log("Modal closed");
     }
-  });
-
-  console.log("Blog modal initialized");
-}
-
-/* ---------------------- Scroll Animations ---------------------- */
-function initScrollAnimations() {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    {
-      threshold: 0.1,
-      rootMargin: "0px 0px -40px 0px",
-    },
-  );
-
-  // Observe blog cards and other animated elements
-  setTimeout(() => {
-    const cards = document.querySelectorAll(".card-post");
-    const skillTags = document.querySelectorAll(".skill-tag");
-    const contactLinks = document.querySelectorAll(".contact-link");
-
-    [...cards, ...skillTags, ...contactLinks].forEach((el) =>
-      observer.observe(el),
-    );
-    console.log(
-      "Scroll animations initialized for",
-      cards.length + skillTags.length + contactLinks.length,
-      "elements",
-    );
-  }, 100);
-}
-
-/* ---------------------- Navigation ---------------------- */
-function smoothScrollToSection(targetId) {
-  const targetSection = document.querySelector(targetId);
-  if (!targetSection) {
-    console.error("Target section not found:", targetId);
-    return;
+  } catch (error) {
+    console.error("Modal closing failed:", error);
   }
-
-  targetSection.scrollIntoView({
-    behavior: "smooth",
-    block: "start",
-  });
-  console.log("Scrolled to section:", targetId);
 }
 
-function initNavigation() {
-  // Navigation links
-  document.querySelectorAll(".nav-link").forEach((link) => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+/* ---------------------- Utility Functions ---------------------- */
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
 
-      const targetId = link.getAttribute("href");
-      smoothScrollToSection(targetId);
+function initModalHandlers() {
+  try {
+    const modal = document.getElementById("blogModal");
+    const modalClose = document.getElementById("modalClose");
+    const modalBackdrop = modal?.querySelector(".modal-backdrop");
 
-      // Update active state
-      document
-        .querySelectorAll(".nav-link")
-        .forEach((l) => l.classList.remove("active"));
-      link.classList.add("active");
+    if (modalClose) {
+      modalClose.addEventListener("click", closeBlogModal);
+    }
 
-      console.log("Navigation link clicked:", targetId);
-    });
-  });
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener("click", closeBlogModal);
+    }
 
-  // Hero CTA buttons
-  document.querySelectorAll(".hero-cta a").forEach((link) => {
-    link.addEventListener("click", (e) => {
-      const href = link.getAttribute("href");
-      if (href && href.startsWith("#")) {
-        e.preventDefault();
-        e.stopPropagation();
-        smoothScrollToSection(href);
-        console.log("CTA button clicked:", href);
+    // ESC key handler
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
+        closeBlogModal();
       }
     });
-  });
 
-  // Scroll arrow
-  const scrollArrow = document.getElementById("scrollArrow");
-  if (scrollArrow) {
-    scrollArrow.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      smoothScrollToSection("#about");
-      console.log("Scroll arrow clicked");
-    });
-  } else {
-    console.error("Scroll arrow not found");
+    console.log("Modal handlers initialized");
+  } catch (error) {
+    console.error("Modal handlers initialization failed:", error);
   }
+}
 
-  // Update active navigation on scroll
-  const sections = document.querySelectorAll("section[id]");
-  const navLinks = document.querySelectorAll(".nav-link");
-
-  function updateActiveNav() {
-    let current = "";
-    sections.forEach((section) => {
-      const sectionTop = section.offsetTop - 100;
-      if (window.pageYOffset >= sectionTop) {
-        current = section.getAttribute("id");
-      }
-    });
+function initScrollBehavior() {
+  try {
+    // Smooth scroll for navigation links
+    const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
 
     navLinks.forEach((link) => {
-      link.classList.remove("active");
-      if (link.getAttribute("href") === `#${current}`) {
-        link.classList.add("active");
-      }
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute("href");
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      });
     });
+
+    // Hero CTA buttons
+    const ctaButtons = document.querySelectorAll('.hero-cta a[href^="#"]');
+
+    ctaButtons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        const targetId = button.getAttribute("href");
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      });
+    });
+
+    console.log("Scroll behavior initialized");
+  } catch (error) {
+    console.error("Scroll behavior initialization failed:", error);
   }
-
-  window.addEventListener("scroll", updateActiveNav, { passive: true });
-  updateActiveNav(); // Initial call
-
-  console.log("Navigation initialized");
 }
 
-/* ---------------------- Header Scroll Effect ---------------------- */
-function initHeaderScrollEffect() {
-  const header = document.querySelector(".header");
-  if (!header) {
-    console.error("Header not found");
-    return;
-  }
-
-  function updateHeader() {
-    const currentScrollY = window.pageYOffset;
-
-    if (currentScrollY > 100) {
-      header.style.backgroundColor = `rgba(var(--color-surface), 0.95)`;
-    } else {
-      header.style.backgroundColor = `rgba(var(--color-surface), 0.8)`;
-    }
-  }
-
-  window.addEventListener("scroll", updateHeader, { passive: true });
-  console.log("Header scroll effect initialized");
-}
-
-/* ---------------------- Particles Animation ---------------------- */
-function initParticles() {
-  const particlesContainer = document.querySelector(".hero-particles");
-  if (!particlesContainer) {
-    console.error("Particles container not found");
-    return;
-  }
-
-  // Create additional floating particles
-  for (let i = 0; i < 3; i++) {
-    const particle = document.createElement("div");
-    particle.style.position = "absolute";
-    particle.style.width = "3px";
-    particle.style.height = "3px";
-    particle.style.background = "var(--color-primary)";
-    particle.style.borderRadius = "50%";
-    particle.style.opacity = "0.6";
-
-    // Random position
-    particle.style.top = Math.random() * 80 + 10 + "%";
-    particle.style.left = Math.random() * 80 + 10 + "%";
-
-    // Random animation
-    const duration = 3 + Math.random() * 4;
-    particle.style.animation = `float${(i % 2) + 1} ${duration}s ease-in-out infinite`;
-    particle.style.animationDelay = Math.random() * 2 + "s";
-
-    particlesContainer.appendChild(particle);
-  }
-
-  console.log("Particles initialized");
-}
-
-/* ---------------------- Initialize Everything ---------------------- */
+/* ---------------------- Main Initialization ---------------------- */
 function initApp() {
-  console.log("Initializing app...");
+  console.log("Initializing blog application...");
 
   try {
+    // Initialize all components
     initTheme();
     initTypingAnimation();
+    initModalHandlers();
+    initScrollBehavior();
     renderBlogPosts();
-    initBlogModal();
-    initScrollAnimations();
-    initNavigation();
-    initHeaderScrollEffect();
-    initParticles();
 
-    // Trigger entrance animations
-    setTimeout(() => {
-      document.body.classList.add("loaded");
-    }, 100);
-
-    console.log("App initialization complete");
+    console.log("Blog application initialized successfully");
   } catch (error) {
-    console.error("Error during app initialization:", error);
+    console.error("Application initialization failed:", error);
   }
 }
 
-// Initialize when DOM is ready
+/* ---------------------- Application Entry Point ---------------------- */
+// Wait for DOM to be fully loaded before initializing
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {
+  // DOM is already loaded
   initApp();
 }
 
-// Handle page visibility change
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) {
-    // Re-trigger animations when page becomes visible
-    setTimeout(() => {
-      const cards = document.querySelectorAll(".card-post:not(.visible)");
-      cards.forEach((card, idx) => {
-        setTimeout(() => card.classList.add("visible"), idx * 100);
-      });
-    }, 100);
-  }
-});
+// Export functions for potential external use
+export {
+  initTheme,
+  initTypingAnimation,
+  renderBlogPosts,
+  openBlogModal,
+  closeBlogModal,
+  initApp,
+};

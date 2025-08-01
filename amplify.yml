@@ -1,0 +1,24 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Install dependencies
+        - npm ci
+        # Install gray-matter for markdown processing (if not in package.json)
+        - npm install gray-matter --no-save
+        # Run the markdown build script to generate blogPosts.js
+        - node build-markdown.js
+    build:
+      commands:
+        # Build the frontend application
+        - npm run build
+  artifacts:
+    # Output directory for the built application
+    baseDirectory: /
+    files:
+      - '**/*'
+  cache:
+    paths:
+      # Cache node_modules for faster subsequent builds
+      - node_modules/**/*
