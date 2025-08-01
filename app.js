@@ -1,5 +1,3 @@
-// Oliver's Enhanced Personal Blog JavaScript - Fixed Version
-
 /* --- Data Source --- */
 const blogPosts = [
   {
