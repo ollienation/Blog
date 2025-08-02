@@ -1,3 +1,8 @@
 .dev/
 node_modules
 blogPosts.js
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*

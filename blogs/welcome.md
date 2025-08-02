@@ -54,6 +54,7 @@ Web services
 - AWS S3 free tier
 - AWS amplify free tier
 - Vast.ai - BIS for gpu rental
+- GitHub - code hosting
 
 Main software
 
