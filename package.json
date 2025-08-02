@@ -19,7 +19,7 @@
     "aws-amplify"
   ],
   "author": "Oliver",
-  "license": "CC BY-SA 4.0",
+  "license": "CC-BY-SA-4.0",
   "devDependencies": {
     "@aws-amplify/backend": "^1.16.1",
     "@aws-amplify/backend-cli": "^1.8.0",

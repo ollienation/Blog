@@ -372,6 +372,18 @@ function initScrollBehavior() {
       });
     });
 
+    // Hero scroll down arrow
+    const arrow = document.querySelector(".scroll-arrow");
+
+    if (arrow) {
+      arrow.addEventListener("click", (e) => {
+        e.preventDefault();
+        document
+          .getElementById("about")
+          .scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
     console.log("Scroll behavior initialized");
   } catch (error) {
     console.error("Scroll behavior initialization failed:", error);
