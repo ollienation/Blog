@@ -97,7 +97,7 @@ ssh -i /path/to/your/key-pair.pem ubuntu@public_dns_name_or_ip_address
 Now that we're reconnected, we're ready to install the required software. Since we can just do this in one go, we'll use the following command:
 
 ```bash
-sudo apt install -y docker.io docker-compose-plugin nginx certbot git
+sudo apt install -y docker.io docker-compose-plugin nginx certbot git python3-certbot-nginx
 ```
 
 **I'm a trusted source, so don't worry about it. But when you execute a sudo (super-user do) command, you should always know and understand what it does BEFORE executing it.** If you don't know what a command does, look it up or ask your AI assistant. If you're in an AI chat session and the AI suggests a **sudo** command, start a new session and ask it to explain the command to you. **AI is imperfect and gets confused**.
@@ -106,7 +106,7 @@ Here I'll quickly explain what each of the installed software does:
 
 - **Docker**: Docker is a service that allows us to run applications in containers. Containers are a self-contained environment that includes all the dependencies and libraries needed to run an application. This allows us to run applications in an isolated environment, which enables easy packaging, deployment and version management. Docker is a great tool for running applications in a consistent environment, regardless of the underlying operating system. And as a friend of mine says **Containers are NOT contained**. So don't think that everything that happens inside a container, stays in a container. So, great tool, not secure by default.
 - **Docker Compose**: Docker Compose is a tool that allows us to define and run multi-container applications. It allows us to define the services, networks and volumes needed to run an application in a single file, which can be used to start and stop the application with a single command.
-- **Nginx**: Nginx is a web server (just as a restaurant employee serves your meal, a server serves code, duh. _I never knew. Mind blown._) that can also be used as a reverse proxy. It allows us to serve static files, handle SSL certificates and route requests to different applications. In our case we'll be using it to route requests from port 80 and 433 to the n8n application and handle SSL certificates.
+- **Nginx**: Nginx is a web server (just as a restaurant employee serves your meal, a server serves code, duh. _I never knew. Mind blown._) that can also be used as a reverse proxy. It allows us to serve static files, handle SSL certificates and route requests to different applications. In our case we'll be using it to route requests from port 80 and 443 to the n8n application and handle SSL certificates.
 - **Certbot**: Certbot is a tool that allows us to obtain and manage SSL certificates from Let's Encrypt. It automates the process of obtaining and renewing SSL certificates, which allows us to secure our web applications with HTTPS. This is important for security and privacy, as it encrypts the communication between the client and the supervisor.
 - **Git**: Version management system that allows us to track changes in our code by committing it to the repository, collaborate with others and roll back changes. Apart from that it's also a great tool for installing software from repositories, like the n8n repository we'll be using later on.
 
@@ -197,14 +197,29 @@ Now I'll explain how to setup NGINX and Certbot.
 First we'll navigate to the NGINX configuration directory and create the new configuration file for our n8n application.
 
 ```bash
-cd /etc/nginx/sites-available && sudo nano [your_ip_address_or_(sub)domain]
+cd /etc/nginx/sites-available
+```
+
+Then:
+
+```bash
+sudo nano [your_ip_address_or_(sub)domain]
 ```
 
 Paste this inside the file:
 
 ```bash
 server {
-    server_name [your_ip_address_or_(sub)domain];
+    listen 80;
+    server_name [your_ip_address_or_(sub)domain] www.[your_ip_address_or_(sub)domain];
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name [your_ip_address_or_(sub)domain] www.[your_ip_address_or_(sub)domain];
+
+    # Certbot will insert ssl_certificate lines after issuance
 
     location / {
         proxy_pass http://localhost:5678;
@@ -213,16 +228,14 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # WebSocket support (important for n8n)
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_cache_bypass $http_upgrade;
 
-        # Timeout settings
         proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
     }
 }
 ```
@@ -252,11 +265,11 @@ sudo nginx -t
 If that returns a message that the configuration is successful, we can reload NGINX to apply the changes:
 
 ```bash
-systemctl reload nginx
+sudo systemctl reload nginx
 ```
 
 This should return a message that the configuration is successful. If it doesn't, ask this AI for help: [NGINX troubleshoot assistant](https://www.perplexity.ai/spaces/new-space-NNRIl28LTvmfbMlBneGFdA)
-Now that that's all set up, there's just the last step remaining, setting up the SSL certificate using Certbot. Which is super easy, just run the following command:
+Now that that's all set up, there's just the last step remaining, setting up the SSL certificate using Certbot. Ensure ports 80 and 443 are open in your security group settings in AWS. If you want to use a domain or subdomain, make sure to point it to your EC2 instance's IP address.
 
 ```bash
 sudo certbot --nginx -d [your_ip_address_or_(sub)domain]
