@@ -2,7 +2,7 @@
 node_modules
 blogPosts.js
 blogs/sample-blog-post.md
-
+loading/
 amplify/
 .amplify
 amplify_outputs*
