@@ -3,6 +3,10 @@ import { blogPosts } from "./blogPosts.js";
 /* ---------------------- Global State ---------------------- */
 let currentTheme = "light";
 let isTypingAnimationRunning = false;
+let lastFocusedElement;
+let markedInstance = null;
+let isMermaidInitialized = false;
+let focusableElements = [];
 
 /* ---------------------- Theme Switcher ---------------------- */
 function initTheme() {
@@ -150,26 +154,59 @@ function formatDate(dateString) {
     return dateString; // Return original if formatting fails
   }
 }
+/**
+ * Dynamically loads and configures the 'marked' library.
+ * This function ensures the library is loaded and configured only once.
+ * @returns {Promise<object>} The configured marked instance.
+ */
+async function getMarkedInstance() {
+  // If the instance already exists, return it immediately.
+  if (markedInstance) {
+    return markedInstance;
+  }
+
+  try {
+    // Dynamically import the library.
+    const { marked } = await import("marked");
+
+    if (window.hljs) {
+      marked.setOptions({
+        highlight: function (code, lang) {
+          const language = hljs.getLanguage(lang) ? lang : "plaintext";
+          return hljs.highlight(code, { language }).value;
+        },
+        langPrefix: "hljs language-",
+        gfm: true,
+      });
+      console.log("marked.js dynamically configured with highlight.js");
+    } else {
+      console.warn(
+        "highlight.js not found; syntax highlighting will be disabled.",
+      );
+    }
+
+    // Save the configured instance for future use.
+    markedInstance = marked;
+    return markedInstance;
+  } catch (error) {
+    console.error("Failed to load or configure marked.js:", error);
+    // Return a fallback object to prevent the site from crashing.
+    return { parse: (content) => content };
+  }
+}
 
 function parseMarkdown(content) {
   try {
-    return content
-      .replace(/^# (.*$)/gim, "<h1>$1</h1>")
-      .replace(/^## (.*$)/gim, "<h2>$1</h2>")
-      .replace(/^### (.*$)/gim, "<h3>$1</h3>")
-      .replace(/^- (.*$)/gim, "<li>$1</li>")
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/`(.*?)`/g, "<code>$1</code>")
-      .replace(/\n\n/g, "</p><p>")
-      .replace(/^(?!<[hul]|<p>)/gm, "<p>")
-      .replace(/$/gm, "</p>")
-      .replace(/<p><\/p>/g, "")
-      .replace(/(<\/[hul]i?>)<p>/g, "$1")
-      .replace(/<\/p>(<[hul])/g, "$1");
+    // Convert Markdown to HTML
+    const dirtyHtml = marked.parse(content || "");
+
+    // Sanitize the generated HTML
+    const cleanHtml = DOMPurify.sanitize(dirtyHtml);
+
+    return cleanHtml;
   } catch (error) {
     console.error("Markdown parsing failed:", error);
-    return content; // Return original content if parsing fails
+    return content;
   }
 }
 
@@ -177,7 +214,6 @@ function parseMarkdown(content) {
 function renderBlogPosts() {
   try {
     const grid = document.getElementById("blogGrid");
-
     if (!grid) {
       console.error("Blog grid element not found");
       return;
@@ -185,38 +221,51 @@ function renderBlogPosts() {
 
     if (!blogPosts || !Array.isArray(blogPosts) || blogPosts.length === 0) {
       console.warn("No blog posts available to render");
-      grid.innerHTML =
-        '<p class="no-posts">No blog posts available at the moment.</p>';
+      grid.innerHTML = "<p>No blog posts available at the moment.</p>";
       return;
     }
 
-    // Clear existing content
+    // Clear existing content before rendering
     grid.innerHTML = "";
 
     blogPosts.forEach((post, idx) => {
       try {
+        // --- Refactored DOM Creation ---
+
+        // 1. Create the main card container
         const card = document.createElement("div");
         card.className = "card-post";
-        card.style.transitionDelay = `${idx * 150}ms`;
         card.setAttribute("data-post-id", post.id);
 
-        // Safely generate tags HTML
-        const tagsHtml = (post.tags || [])
-          .map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`)
-          .join("");
+        // 2. Create the title element
+        const title = document.createElement("h3");
+        title.textContent = post.title;
 
-        card.innerHTML = `
-          <h3>${escapeHtml(post.title || "Untitled")}</h3>
-          <div class="post-meta">
-            <span>${formatDate(post.date || new Date().toISOString())}</span>
-            <span>${escapeHtml(post.readTime || "Unknown read time")}</span>
-          </div>
-          <p>${escapeHtml(post.excerpt || "No excerpt available")}</p>
-          <div class="post-tags">
-            ${tagsHtml}
-          </div>
-        `;
+        // 3. Create the metadata element
+        const meta = document.createElement("div");
+        meta.className = "post-meta";
+        meta.textContent = `${formatDate(post.date)} | ${post.readTime}`;
 
+        // 4. Create the excerpt element
+        const excerpt = document.createElement("p");
+        excerpt.textContent = post.excerpt || "No excerpt available";
+
+        // 5. Create the tags container and individual tags
+        const tagsContainer = document.createElement("div");
+        tagsContainer.className = "post-tags";
+        if (post.tags && Array.isArray(post.tags)) {
+          post.tags.forEach((tagText) => {
+            const tagElement = document.createElement("span");
+            tagElement.className = "tag";
+            tagElement.textContent = tagText;
+            tagsContainer.appendChild(tagElement);
+          });
+        }
+
+        // 6. Append all created elements to the card
+        card.append(title, meta, excerpt, tagsContainer);
+
+        // 7. Add the click event listener
         card.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -224,14 +273,16 @@ function renderBlogPosts() {
           console.log("Blog card clicked:", post.title);
         });
 
+        // 8. Append the fully constructed card to the grid
         grid.appendChild(card);
 
-        // Trigger animation after a brief delay
+        // 9. Trigger the entrance animation
+        // Note: The transition is defined in CSS on the .card-post class
         setTimeout(() => {
           card.classList.add("visible");
         }, idx * 100);
       } catch (error) {
-        console.error("Error rendering blog post:", post, error);
+        console.error("Error rendering individual blog post:", post, error);
       }
     });
 
@@ -242,47 +293,58 @@ function renderBlogPosts() {
 }
 
 /* ---------------------- Blog Modal ---------------------- */
-function openBlogModal(post) {
-  try {
-    const modal = document.getElementById("blogModal");
-    const modalBody = document.getElementById("modalBody");
+async function openBlogModal(post) {
+  if (!post) return;
 
-    if (!modal || !modalBody) {
-      console.error("Modal elements not found");
-      return;
-    }
+  lastFocusedElement = document.activeElement;
+  const modal = document.getElementById("blogModal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalBody = document.getElementById("modalBody");
+  const modalMeta = document.getElementById("modalMeta");
 
-    const tagsHtml = (post.tags || [])
-      .map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`)
-      .join("");
+  if (modalTitle) modalTitle.textContent = post.title;
+  if (modalMeta) {
+    const authorSpan = document.createElement("span");
+    authorSpan.textContent = post.author;
+    const dateSpan = document.createElement("span");
+    dateSpan.textContent = formatDate(post.date);
+    const readTimeSpan = document.createElement("span");
+    readTimeSpan.textContent = post.readTime;
+    modalMeta.replaceChildren(authorSpan, dateSpan, readTimeSpan);
+  }
 
-    const contentHtml = parseMarkdown(post.content || "No content available");
+  if (modalBody) {
+    const marked = await getMarkedInstance();
+    const { default: DOMPurify } = await import("dompurify");
+    const { default: hljs } = await import("highlight.js");
+    const dirtyHtml = marked.parse(post.content || "");
+    const cleanHtml = DOMPurify.sanitize(dirtyHtml);
 
-    modalBody.innerHTML = `
-      <article class="blog-post">
-        <header class="post-header">
-          <h1>${escapeHtml(post.title || "Untitled")}</h1>
-          <div class="post-meta">
-            <span class="post-date">${formatDate(post.date || new Date().toISOString())}</span>
-            <span class="post-read-time">${escapeHtml(post.readTime || "Unknown read time")}</span>
-            <span class="post-author">by ${escapeHtml(post.author || "Unknown")}</span>
-          </div>
-          <div class="post-tags">
-            ${tagsHtml}
-          </div>
-        </header>
-        <div class="post-content">
-          ${contentHtml}
-        </div>
-      </article>
-    `;
+    modalBody.innerHTML = cleanHtml;
 
+    modalBody
+      .querySelectorAll("pre code:not(.language-mermaid)")
+      .forEach((block) => {
+        hljs.highlightElement(block);
+      });
+
+    await renderMermaidDiagrams(modalBody);
+    // -----------
+  }
+
+  // --- (The rest of the function for showing the modal and trapping focus remains the same) ---
+  if (modal) {
+    const focusableElementsSelector =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    focusableElements = Array.from(
+      modal.querySelectorAll(focusableElementsSelector),
+    );
     modal.classList.remove("hidden");
-    document.body.style.overflow = "hidden"; // Prevent background scrolling
-
-    console.log("Modal opened for:", post.title);
-  } catch (error) {
-    console.error("Modal opening failed:", error);
+    document.body.classList.add("modal-open");
+    const modalCloseButton = document.getElementById("modalClose");
+    if (modalCloseButton) {
+      modalCloseButton.focus();
+    }
   }
 }
 
@@ -292,8 +354,12 @@ function closeBlogModal() {
 
     if (modal) {
       modal.classList.add("hidden");
-      document.body.style.overflow = ""; // Restore scrolling
+      document.body.classList.remove("modal-open");
       console.log("Modal closed");
+
+      if (lastFocusedElement) {
+        lastFocusedElement.focus();
+      }
     }
   } catch (error) {
     console.error("Modal closing failed:", error);
@@ -301,36 +367,117 @@ function closeBlogModal() {
 }
 
 /* ---------------------- Utility Functions ---------------------- */
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
-
 function initModalHandlers() {
   try {
     const modal = document.getElementById("blogModal");
     const modalClose = document.getElementById("modalClose");
     const modalBackdrop = modal?.querySelector(".modal-backdrop");
 
+    // --- Focus Trapping Logic ---
+    const trapFocus = (e) => {
+      // This now correctly references the GLOBAL focusableElements array.
+      if (e.key !== "Tab" || focusableElements.length === 0) return;
+
+      const firstFocusableElement = focusableElements[0];
+      const lastFocusableElement =
+        focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstFocusableElement) {
+          lastFocusableElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastFocusableElement) {
+          firstFocusableElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
     if (modalClose) {
       modalClose.addEventListener("click", closeBlogModal);
     }
-
     if (modalBackdrop) {
       modalBackdrop.addEventListener("click", closeBlogModal);
     }
 
-    // ESC key handler
+    // ESC key and Tab trapping
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
-        closeBlogModal();
+      if (modal && !modal.classList.contains("hidden")) {
+        if (e.key === "Escape") {
+          closeBlogModal();
+        }
+        // Add focus trapping listener
+        trapFocus(e);
       }
     });
-
     console.log("Modal handlers initialized");
   } catch (error) {
     console.error("Modal handlers initialization failed:", error);
+  }
+}
+
+async function renderMermaidDiagrams(container) {
+  // Find all code blocks marked with the 'mermaid' language by the 'marked' parser.
+  const mermaidCodeBlocks = container.querySelectorAll("code.language-mermaid");
+
+  if (mermaidCodeBlocks.length === 0) {
+    return; // Exit early if there are no diagrams to render.
+  }
+
+  try {
+    const { default: mermaid } = await import("mermaid");
+
+    if (!isMermaidInitialized) {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: "neutral", // A good base theme for light/dark modes
+        securityLevel: "strict", // Recommended for security
+      });
+      isMermaidInitialized = true;
+      console.log("Mermaid.js dynamically initialized.");
+    }
+
+    // Process each Mermaid block individually and asynchronously.
+    const renderPromises = Array.from(mermaidCodeBlocks).map(
+      async (codeElement, index) => {
+        const diagramId = `mermaid-diagram-${Date.now()}-${index}`;
+        const diagramDefinition = codeElement.textContent || "";
+        const parentPreElement = codeElement.parentElement; // The <pre> tag wrapping the code block
+
+        try {
+          // Use the Mermaid API to render the diagram definition into SVG markup.
+          const { svg } = await mermaid.render(diagramId, diagramDefinition);
+
+          // Create a styled container for the diagram.
+          const diagramContainer = document.createElement("div");
+          diagramContainer.classList.add("mermaid-diagram-container");
+          diagramContainer.innerHTML = svg;
+
+          // Replace the original <pre> block with the rendered SVG container.
+          if (parentPreElement) {
+            parentPreElement.replaceWith(diagramContainer);
+          }
+        } catch (error) {
+          console.error(`Failed to render Mermaid diagram ${index}:`, error);
+          // Optionally display an error message in the UI.
+          if (parentPreElement) {
+            parentPreElement.innerHTML = "Error: Failed to render diagram.";
+            parentPreElement.style.color = "red";
+          }
+        }
+      },
+    );
+
+    await Promise.all(renderPromises);
+    console.log(
+      `Processed and rendered ${mermaidCodeBlocks.length} Mermaid diagram(s).`,
+    );
+  } catch (error) {
+    console.error("Failed to load or run Mermaid.js:", error);
   }
 }
 

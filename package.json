@@ -4,13 +4,19 @@
   "description": "Dynamic markdown blog with AWS Amplify integration",
   "main": "index.html",
   "scripts": {
-    "build": "node build-markdown.js",
-    "dev": "python -m http.server 8000",
+    "build": "node build-markdown.js && esbuild app.js --bundle --splitting --outdir=dist --format=esm --minify",
+    "dev": "esbuild app.js --bundle --servedir=. --outdir=dist",
     "test": "echo \"No tests specified\" && exit 0"
   },
+  "overrides": {
+    "@aws-sdk/types": "^3.734.0"
+  },
   "dependencies": {
-    "aws-amplify": "^6.15.4",
-    "gray-matter": "^4.0.3"
+    "dompurify": "^3.2.6",
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.11.1",
+    "marked": "^16.1.2",
+    "mermaid": "^11.9.0"
   },
   "keywords": [
     "markdown",
@@ -21,12 +27,6 @@
   "author": "Oliver",
   "license": "CC-BY-SA-4.0",
   "devDependencies": {
-    "@aws-amplify/backend": "^1.16.1",
-    "@aws-amplify/backend-cli": "^1.8.0",
-    "aws-cdk-lib": "^2.204.0",
-    "constructs": "^10.4.2",
-    "esbuild": "^0.25.8",
-    "tsx": "^4.20.3",
-    "typescript": "^5.9.2"
+    "esbuild": "^0.25.8"
   }
 }

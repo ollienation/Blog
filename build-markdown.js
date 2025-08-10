@@ -2,10 +2,10 @@
 
 /**
  * Build Script for Dynamic Markdown Blog Processing
- * 
+ *
  * This script processes markdown files from the /blogs directory during AWS Amplify build
  * and generates a blogPosts.js module for dynamic import in the main application.
- * 
+ *
  * Features:
  * - Processes markdown files with or without frontmatter
  * - Generates excerpts, calculates read time, and handles fallbacks
@@ -13,22 +13,13 @@
  * - Optimized for AWS Amplify build environment
  */
 
-const fs = require('fs');
-const path = require('path');
-
-// Install gray-matter if not present (for AWS Amplify builds)
-try {
-  require('gray-matter');
-} catch (error) {
-  console.log('Installing gray-matter dependency...');
-  require('child_process').execSync('npm install gray-matter', { stdio: 'inherit' });
-}
-
-const matter = require('gray-matter');
+const fs = require("fs");
+const path = require("path");
+const matter = require("gray-matter");
 
 // Configuration
-const BLOGS_DIR = './blogs';
-const OUTPUT_FILE = './blogPosts.js';
+const BLOGS_DIR = "./blogs";
+const OUTPUT_FILE = "./blogPosts.js";
 const WORDS_PER_MINUTE = 250;
 
 /**
@@ -51,21 +42,21 @@ function calculateReadTime(content) {
 function generateExcerpt(content, maxLength = 150) {
   // Remove markdown headers and format to get clean text
   const cleanContent = content
-    .replace(/^#{1,6}\s+/gm, '') // Remove headers
-    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
-    .replace(/\*(.*?)\*/g, '$1') // Remove italic
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
-    .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-    .replace(/`([^`]+)`/g, '$1') // Remove inline code
+    .replace(/^#{1,6}\s+/gm, "") // Remove headers
+    .replace(/\*\*(.*?)\*\*/g, "$1") // Remove bold
+    .replace(/\*(.*?)\*/g, "$1") // Remove italic
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove links, keep text
+    .replace(/```[\s\S]*?```/g, "") // Remove code blocks
+    .replace(/`([^`]+)`/g, "$1") // Remove inline code
     .trim();
 
   // Get first paragraph or truncate to maxLength
-  const firstParagraph = cleanContent.split('\n\n')[0];
+  const firstParagraph = cleanContent.split("\n\n")[0];
   if (firstParagraph.length <= maxLength) {
     return firstParagraph;
   }
 
-  return cleanContent.substring(0, maxLength).replace(/\s+\S*$/, '') + '...';
+  return cleanContent.substring(0, maxLength).replace(/\s+\S*$/, "") + "...";
 }
 
 /**
@@ -75,18 +66,20 @@ function generateExcerpt(content, maxLength = 150) {
  * @returns {string} - Extracted or fallback title
  */
 function extractTitle(content, filename) {
-  const lines = content.split('\n');
-  const titleLine = lines.find(line => line.startsWith('# '));
+  const lines = content.split("\n");
+  const titleLine = lines.find((line) => line.startsWith("# "));
 
   if (titleLine) {
     return titleLine.substring(2).trim();
   }
 
   // Fallback to filename without extension
-  return filename.replace(/\.md$/i, '').replace(/[-_]/g, ' ')
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  return filename
+    .replace(/\.md$/i, "")
+    .replace(/[-_]/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 /**
@@ -99,10 +92,21 @@ function inferTags(content, filename) {
   const tags = [];
 
   // Common technical terms that might be tags
-  const techTerms = ['javascript', 'react', 'node', 'aws', 'ai', 'tech', 'web', 'api', 'css', 'html'];
+  const techTerms = [
+    "javascript",
+    "react",
+    "node",
+    "aws",
+    "ai",
+    "tech",
+    "web",
+    "api",
+    "css",
+    "html",
+  ];
   const contentLower = content.toLowerCase();
 
-  techTerms.forEach(term => {
+  techTerms.forEach((term) => {
     if (contentLower.includes(term)) {
       tags.push(term.charAt(0).toUpperCase() + term.slice(1));
     }
@@ -110,8 +114,8 @@ function inferTags(content, filename) {
 
   // Add filename-based tag if no tech terms found
   if (tags.length === 0) {
-    const baseTag = filename.replace(/\.md$/i, '').replace(/[-_]/g, ' ');
-    tags.push('General');
+    const baseTag = filename.replace(/\.md$/i, "").replace(/[-_]/g, " ");
+    tags.push("General");
   }
 
   return tags.slice(0, 3); // Limit to 3 tags
@@ -125,62 +129,62 @@ function inferTags(content, filename) {
  */
 function processMarkdownFile(filePath, id) {
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const fileContent = fs.readFileSync(filePath, "utf8");
     const filename = path.basename(filePath);
     const stats = fs.statSync(filePath);
-
     console.log(`Processing: ${filename}`);
 
-    // Parse with gray-matter
-    const parsed = matter(content);
-    const hasValidFrontmatter = parsed.data && Object.keys(parsed.data).length > 0;
+    const parsed = matter(fileContent);
+    const hasValidFrontmatter =
+      parsed.data && Object.keys(parsed.data).length > 0;
 
-    let blogPost;
+    // Use parsed.content for posts with frontmatter, or the full content for those without.
+    const mainContent = hasValidFrontmatter ? parsed.content : fileContent;
 
-    if (hasValidFrontmatter) {
-      // Use frontmatter data
-      blogPost = {
-        id,
-        title: parsed.data.title || extractTitle(parsed.content, filename),
-        excerpt: parsed.data.excerpt || generateExcerpt(parsed.content),
-        content: parsed.content,
-        date: parsed.data.date || stats.mtime.toISOString().split('T')[0],
-        readTime: parsed.data.readTime || calculateReadTime(parsed.content),
-        tags: parsed.data.tags || inferTags(parsed.content, filename),
-        author: parsed.data.author || 'Oliver'
-      };
-    } else {
-      // Handle files without frontmatter (like welcome.md)
-      console.log(`  → No frontmatter found, using fallback extraction`);
-      blogPost = {
-        id,
-        title: extractTitle(content, filename),
-        excerpt: generateExcerpt(content),
-        content: content,
-        date: stats.mtime.toISOString().split('T')[0],
-        readTime: calculateReadTime(content),
-        tags: inferTags(content, filename),
-        author: 'Oliver'
-      };
-    }
+    // Create a temporary version of the content for the excerpt by removing the H1 title line.
+    // This is the key change to fix the duplicate title issue.
+    const contentForExcerpt = mainContent
+      .replace(/^# .*\r?\n(\r?\n)?/, "")
+      .trim();
 
-    console.log(`  → Title: "${blogPost.title}"`);
-    console.log(`  → Tags: [${blogPost.tags.join(', ')}]`);
-    console.log(`  → Read time: ${blogPost.readTime}`);
+    // Assemble the final blog post object.
+    const blogPost = {
+      id,
+      title:
+        (hasValidFrontmatter && parsed.data.title) ||
+        extractTitle(mainContent, filename),
+      // Use frontmatter excerpt if it exists, otherwise generate from our title-less content.
+      excerpt:
+        (hasValidFrontmatter && parsed.data.excerpt) ||
+        generateExcerpt(contentForExcerpt),
+      // The main content still includes the H1 title for the modal view.
+      content: mainContent,
+      date:
+        (hasValidFrontmatter && parsed.data.date) ||
+        stats.mtime.toISOString().split("T")[0],
+      readTime:
+        (hasValidFrontmatter && parsed.data.readTime) ||
+        calculateReadTime(mainContent),
+      tags:
+        (hasValidFrontmatter && parsed.data.tags) ||
+        inferTags(mainContent, filename),
+      author: (hasValidFrontmatter && parsed.data.author) || "Oliver",
+    };
 
+    console.log(` → Title: "${blogPost.title}"`);
+    console.log(` → Tags: [${blogPost.tags.join(", ")}]`);
+    console.log(` → Read time: ${blogPost.readTime}`);
     return blogPost;
-
   } catch (error) {
     console.error(`Error processing ${filePath}:`, error.message);
     return null;
   }
 }
-
 /**
  * Main build function
  */
 function buildBlogPosts() {
-  console.log('🚀 Starting markdown blog build process...');
+  console.log("🚀 Starting markdown blog build process...");
   console.log(`📁 Scanning directory: ${BLOGS_DIR}`);
 
   // Check if blogs directory exists
@@ -190,8 +194,9 @@ function buildBlogPosts() {
   }
 
   // Read all markdown files
-  const files = fs.readdirSync(BLOGS_DIR)
-    .filter(file => file.endsWith('.md'))
+  const files = fs
+    .readdirSync(BLOGS_DIR)
+    .filter((file) => file.endsWith(".md"))
     .sort(); // Ensure consistent ordering
 
   if (files.length === 0) {
@@ -200,8 +205,8 @@ function buildBlogPosts() {
   }
 
   console.log(`📝 Found ${files.length} markdown files:`);
-  files.forEach(file => console.log(`   • ${file}`));
-  console.log('');
+  files.forEach((file) => console.log(`   • ${file}`));
+  console.log("");
 
   // Process each file
   const blogPosts = [];
@@ -224,7 +229,7 @@ function buildBlogPosts() {
   const timestamp = new Date().toISOString();
   const moduleContent = `// Auto-generated by build-markdown.js - DO NOT EDIT MANUALLY
 // Generated on: ${timestamp}
-// Source files: ${files.join(', ')}
+// Source files: ${files.join(", ")}
 
 export const blogPosts = ${JSON.stringify(blogPosts, null, 2)};
 
@@ -237,7 +242,7 @@ export const generatedAt = "${timestamp}";
 
   // Write the generated module
   try {
-    fs.writeFileSync(OUTPUT_FILE, moduleContent, 'utf8');
+    fs.writeFileSync(OUTPUT_FILE, moduleContent, "utf8");
     console.log(`✅ Successfully generated ${OUTPUT_FILE}`);
     console.log(`📊 Generated ${blogPosts.length} blog posts`);
     console.log(`⏱️  Build completed in ${Date.now() - startTime}ms`);
@@ -253,7 +258,7 @@ const startTime = Date.now();
 try {
   buildBlogPosts();
 } catch (error) {
-  console.error('❌ Build failed:', error.message);
+  console.error("❌ Build failed:", error.message);
   console.error(error.stack);
   process.exit(1);
 }

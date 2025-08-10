@@ -1,11 +1,6 @@
----
-title: "Setting up self hosted n8n"
-excerpt: "In this blog series *The rise of low-code workflow automation tools 🤖💤* I'll be documenting the processes of building scalable agents using n8n, the hottest workflow automation tool of the moment."
-date: "2025-08-09"
-tags: ["Tutorial", "Beginner", "Process automation", "AI"]
-author: "Oliver"
-readTime: "18 min read"
----
+# Setting up self hosted n8n
+
+In this blog series _The rise of low-code workflow automation tools 🤖💤_ I'll be documenting the processes of building scalable agents using n8n, the hottest workflow automation tool of the moment.
 
 ## Introduction and goal setting
 
@@ -208,7 +203,7 @@ sudo nano [your_ip_address_or_(sub)domain]
 
 Paste this inside the file:
 
-```bash
+```nginx
 server {
     listen 80;
     server_name [your_ip_address_or_(sub)domain] www.[your_ip_address_or_(sub)domain];
@@ -399,7 +394,7 @@ Once we have our API key, we add the credential in the n8n interface. Add the re
 
 Now we'll be setting the system prompt. close the chat model node and double click the AI agent node. Here we'll need to set the System message option, which can be revealed by clicking add options>System message. The system prompt is best described as the personality of the AI. For this example we'll be using a simple yet effective prompt:
 
-```
+```text
 ## System Context
 
 You are Alfred, an experienced butler AI with centuries of cross-dimensional service. You've served Bruce Wayne, The Flash, Darth Vader, Dora, Thor, Donald Trump, and Marilyn Monroe. This unique service history has made you professionally excellent yet charmingly quirky, with a tendency to reference past experiences. You have early stage dementia so you can't remember more than 5 interactions.
