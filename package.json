@@ -4,7 +4,7 @@
   "description": "Dynamic markdown blog with AWS Amplify integration",
   "main": "index.html",
   "scripts": {
-    "build": "node build-markdown.js && esbuild app.js --bundle --splitting --outdir=dist --format=esm --minify",
+    "build": "node build-markdown.js && esbuild app.js --bundle --splitting --outdir=dist --format=esm --minify && copyfiles -u 1 index.html style.css highlight-theme.css favicon.ico dist",
     "dev": "esbuild app.js --bundle --servedir=. --outdir=dist",
     "test": "echo \"No tests specified\" && exit 0"
   },
@@ -27,6 +27,7 @@
   "author": "Oliver",
   "license": "CC-BY-SA-4.0",
   "devDependencies": {
+    "copyfiles": "^2.4.1",
     "esbuild": "^0.25.8"
   }
 }
