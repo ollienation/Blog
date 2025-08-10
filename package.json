@@ -1,15 +1,14 @@
 {
   "name": "dynamic-markdown-blog",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Dynamic markdown blog with AWS Amplify integration",
   "main": "index.html",
   "scripts": {
-    "build": "node build-markdown.js && esbuild app.js --bundle --splitting --outdir=dist --format=esm --minify && copyfiles index.html style.css highlight-theme.css favicon.ico dist",
-    "dev": "esbuild app.js --bundle --servedir=. --outdir=dist",
-    "test": "echo \"No tests specified\" && exit 0"
-  },
-  "overrides": {
-    "@aws-sdk/types": "^3.734.0"
+    "build": "node build-markdown.js && esbuild app.js --bundle --splitting --outdir=dist --format=esm --minify --sourcemap && copyfiles index.html style.css highlight-theme.css favicon.ico dist",
+    "dev": "esbuild app.js --bundle --sourcemap --outdir=dist --servedir=dist",
+    "test": "echo \"No tests specified\" && exit 0",
+    "security": "npm audit --audit-level moderate",
+    "analyze": "source-map-explorer dist/*.js"
   },
   "dependencies": {
     "dompurify": "^3.2.6",
@@ -27,7 +26,9 @@
   "author": "Oliver",
   "license": "CC-BY-SA-4.0",
   "devDependencies": {
+    "@sentry/esbuild-plugin": "^4.0.2",
     "copyfiles": "^2.4.1",
-    "esbuild": "^0.25.8"
+    "esbuild": "^0.25.8",
+    "source-map-explorer": "^2.5.3"
   }
 }

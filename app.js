@@ -314,9 +314,12 @@ async function openBlogModal(post) {
   }
 
   if (modalBody) {
-    const marked = await getMarkedInstance();
-    const { default: DOMPurify } = await import("dompurify");
-    const { default: hljs } = await import("highlight.js");
+    const [marked, { default: DOMPurify }, { default: hljs }] =
+      await Promise.all([
+        getMarkedInstance(),
+        import("dompurify"),
+        import("highlight.js"),
+      ]);
     const dirtyHtml = marked.parse(post.content || "");
     const cleanHtml = DOMPurify.sanitize(dirtyHtml);
 
