@@ -337,7 +337,7 @@ And that is all! If you're still with me, congratulations! You've made it throug
 
 ## Creating a basic workflow
 
-**The flow underneath was the initial plan for the blog post, but I decided to split it up into multiple parts since it was getting too long. You can find the scrapped blog text in the github repo. Somewhere in the near future we'll build a basic workflow with AI chatbot functionality, web search capabilities and document search/retrieval capabilities. We'll also explore how to format the output of our workflow and send it back to the user.**
+**The flow underneath was the initial plan for the blog post, but I decided to split it up into multiple parts since it was getting too long. Somewhere in the near future we'll build a basic workflow with AI chatbot functionality, web search capabilities and document search/retrieval capabilities. We'll also explore how to format the output of our workflow and send it back to the user.**
 
 ```mermaid
 
@@ -346,7 +346,7 @@ flowchart TD
 
     B -->|needs web info| C[Web Search]
     B -->|needs docs| D[Document Search]
-    B -->|general chat| E[Formatting]
+    B -->|general chat| H[Final Response AI]
 
     C --> F[Search Results]
     D --> G[Document Results]
@@ -354,7 +354,7 @@ flowchart TD
     F --> E
     G --> E
 
-    E --> H[Final Response AI]
+    E --> H
     H --> I[User]
 
     %% Node Styling
