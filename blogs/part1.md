@@ -46,18 +46,18 @@ Since we'll be hosting the application ourselves we're going to be using the lat
 
 This requires you to have an AWS account, if you don't have one yet, you can create one [here](https://aws.amazon.com/free/). After creating an account, you'll be able to create a new EC2 instance. For this project we'll be using the free tier, which allows us to run a t2.micro instance for free for 12 months. This is more than enough for our purposes.
 
-Once we're inside the EC2 dashboard, we'll create a new instance. You'll notice that services eligible are marked as **free tier eligible**. We'll select the **Ubuntu Server 24.04 LTS** image, which is a widely used Linux distribution and well documented. After that we'll select the **t2.micro** instance type.
+Once we're inside the EC2 dashboard, we'll create a new instance. You'll notice that services eligible are marked as **free tier eligible**. We'll select the `Ubuntu Server 24.04 LTS` image, which is a widely used Linux distribution and well documented. After that we'll select the **t2.micro** instance type.
 
-After selecting the instance type, we'll generate our SSH key pair. If this is your first time using AWS, you'll have to create a new key pair. This key will allow us to connect to our instance using SSH. I'd recommend using **ED25519** as key type since it's more secure. Name it something n8n, click generate and store it somewhere safe and accessible.
+After selecting the instance type, we'll generate our SSH key pair. If this is your first time using AWS, you'll have to create a new key pair. This key will allow us to connect to our instance using SSH. I'd recommend using `ED25519` as key type since it's more secure. Name it something n8n, click generate and store it somewhere safe and accessible.
 
-To access our server from outside we're going to have to configure some security groups. We'll create a new security group and allow traffic from **SSH, HTTP and HTTPS**.
+To access our server from outside we're going to have to configure some security groups. We'll create a new security group and allow traffic from `SSH`, `HTTP` and `HTTPS`.
 This corresponds the following ports:
 
 - SSH: 22/TCP
 - HTTP: 80/TCP
 - HTTPS: 443/TCP
 
-If you just want easy access from everywhere, you can keep 0.0.0.0/0 **Anywhere**. Be aware that this will allow anyone to access your server so if you don't know what you're doing, it's best to restrict access to your own home IP address. If you want to do this, click **0.0.0.0/0 anywhere** and select **My IP**.
+If you just want easy access from everywhere, you can keep `Anywhere 0.0.0.0/0`. Be aware that this will allow anyone to access your server so if you don't know what you're doing, it's best to restrict access to your own home IP address. If you want to do this, click `Anywhere 0.0.0.0/0` and select `My IP`.
 
 Now fill in 30GB storage instead of 8GB, this is more than enough for our purposes. After that we can review our settings and launch the instance. This will take a few minutes, so let's grab a coffee while we wait. ☕️
 
@@ -65,11 +65,17 @@ Now fill in 30GB storage instead of 8GB, this is more than enough for our purpos
 
 Now that our instance is running, we can connect to it using SSH. First thing we'll do is note down the IP address of our instance, which can be found in our overview. Navigate to the dashboard and click instances in the left menu. This'll take us to the instances overview. Click the instance-id and our IP address should be located on top of the middle row. We'll note this IP-address down and continue with connecting using our terminal.
 
-Open your terminal of choice (Windows: PowerShell, Mac: iTerm, Linux:KITTY🐱, Arch btw\_). Modern operating systems should already have OpenSSH installed. If not, you can install it using your package manager. Since this setup if outside of the scope and differs for each operating system I wont elaborate on this, BUT I've setup an assistant AI that will guide you through the process of connecting to your instance. The assistant can be found [here](https://www.perplexity.ai/spaces/ec2-connection-assistant-6ypBc6ljRPOCr_mSLvi6lg). Just start by sending **Hi** and you should be able to connect in no time. For now you'll need a perplexity account, I'll create a specialized imlosing.it AI assistant soon to bypass this requirement.
+Open your terminal of choice (Windows: PowerShell, Mac: iTerm, Linux:KITTY🐱, Arch btw). Modern operating systems should already have OpenSSH installed and you can continue with below. If not, you can install it using your package manager. Since this setup if outside of the scope and differs for each operating system I wont elaborate on this, BUT I've setup an assistant AI that will guide you through the process of connecting to your instance. The assistant can be found [here](https://www.perplexity.ai/spaces/ec2-connection-assistant-6ypBc6ljRPOCr_mSLvi6lg). Just start by sending **Hi** and you should be able to connect in no time. For now you'll need a perplexity account, I'll create a specialized imlosing.it AI assistant soon to bypass this requirement.
 
-### Installing the required software on the EC2 instance
+Now we have our pem key stored somewhere on our drive and made sure our system has openssh installed, we want to use it to connect to the server. The command to do this is as follows:
+
+```bash
+ssh -i /path/to/your/key-pair.pem ubuntu@public_dns_name_or_ip_address
+```
 
 Now we're connected we can start playing with our very own server.
+
+### Installing the required software on the EC2 instance
 
 First thing we'll do is update our package manager and installed packages. Run the following commands:
 
@@ -123,7 +129,7 @@ Then we'll clone the n8n-hosting repository from GitHub. This repository contain
 git clone https://github.com/n8n-io/n8n-hosting.git
 ```
 
-This will create a new directory called `n8n-hosting` in your current directory. Navigate into the `docker-compose/withPostgres` directory:
+This will create a new directory called **n8n-hosting** in your current directory. Navigate into the **docker-compose/withPostgres** directory:
 
 ```bash
 cd n8n-hosting/docker-compose/withPostgres
@@ -135,7 +141,7 @@ Here we'll have to edit the credentials which we'll be using to connect to the P
 nano .env
 ```
 
-and change the values to your liking. I'll be using the one's know widely to be the best and most secure. **_Read: use your own credentials_**:
+Change the values to your liking. I'll be using the one's know widely to be the best and most secure. **_Read: use your own credentials_**:
 
 ```
 POSTGRES_USER=admin
@@ -154,7 +160,7 @@ Now we've set the credentials we can start the docker containers using the follo
 docker compose up -d
 ```
 
-This should respond with some messages that tell us the db and volumes have been set up and 2 times `done` message.
+This should respond with some messages that tell us the db and volumes have been set up and 2 times **done** message.
 
 To verify this run:
 
@@ -174,7 +180,7 @@ curl http://localhost:5678
 
 This should return some html code that informs you about JavaScript being required to run the application. If you see this, you're good to go!
 
-Configuring DNS using Cloudflare (amazing service, highly recommended) is outside of the scope of this post, but if you want to use a domain or subdomain to access your n8n application, here's the AI that will guide you through the process: [DNS guidance AI](https://www.perplexity.ai/spaces/dns-setup-assistant-5vrLZ2XfQ_G8M9kkxxzBFg)
+Configuring DNS using **Cloudflare** (amazing service, highly recommended) is outside of the scope of this post, but if you want to use a domain or subdomain to access your n8n application, here's the AI that will guide you through the process: [DNS guidance AI](https://www.perplexity.ai/spaces/dns-setup-assistant-5vrLZ2XfQ_G8M9kkxxzBFg)
 
 After this we enable our firewall to allow traffic on ports 80 and 443. This is important for the reverse proxy to work correctly. Run the following commands:
 
@@ -237,7 +243,7 @@ server {
 
 Save the file using `CTRL+X`, then `Y` and `Enter`.
 
-This is a very basic NGINX configuration file that will route requests from ports 80 and 433 to the n8n application running on port 5678. The `server_name` directive should be replaced with your IP address or domain name. The `location /` block contains the proxy settings that will forward requests to the n8n application. If you want the hardened version, you can find it in my [n8n repository](https://github.com/ollienation/n8n/tree/main/configs)
+This is a very basic NGINX configuration file that will route requests from ports 80 and 433 to the n8n application running on port 5678. The **server_name** directive should be replaced with your IP address or domain name. The **location /** block contains the proxy settings that will forward requests to the n8n application. If you want the hardened version, you can find it in my [n8n repository](https://github.com/ollienation/n8n/tree/main/configs)
 
 This will tell NGINX to route requests from your IP address or domain to the n8n application running on port 5678. After saving the file, we need to create a symbolic link to the `sites-enabled` directory:
 
@@ -388,11 +394,11 @@ Adding this node will reveal a new button in the bottom of our canvas which allo
 
 The next thing we'll do is add the agent node. This node will analyze the users question and generate a response. We'll click the `+` next to our trigger node and select the "AI" option in the list and then the AI agent option. Now we can see a new node appear on the canvas. This node has couple of feelers. As you will notice all of these feelers have a different symbol, these symbols represent the type of data that can be send or received by the node. A rectangle represents an input, a circle represents an output and a diamond represents a decision point. Easy right?
 
-For this example I'll be using OpenAI since they have the broadest selection of tools and use of the API is free if you agree to share the data for training & analysis. To add OpenAI as our AI provider, we'll click the `+` button of the `chat model` feeler and search for OpenAI. This will open up the chat model node. The first step is setting our API key. If you don't have an OpenAI account yet, you can create one [here](https://platform.openai.com/signup). After signing up, you'll be able to generate an API key which we'll use to authenticate with the OpenAI API. The section where you can create a key can be found in the dashboard tab, on the left side of the screen.
+For this example I'll be using **OpenAI** since they have the broadest selection of tools and use of the API is free if you agree to share the data for training & analysis. To add **OpenAI** as our AI provider, we'll click the `+` button of the `chat model` feeler and search for OpenAI. This will open up the chat model node. The first step is setting our API key. If you don't have an OpenAI account yet, you can create one [here](https://platform.openai.com/signup). After signing up, you'll be able to generate an API key which we'll use to authenticate with the OpenAI API. The section where you can create a key can be found in the dashboard tab, on the left side of the screen.
 
 Once we have our API key, we add the credential in the n8n interface. Add the requested information and we're onto the next step. Since we're just gonna be chatting with text for now keep that as it is. After that we can set the model, click the dropdown and select `gpt-4o-mini`, this model is quick and suited for most everyday tasks. I won't be elaborating on model choices in the post since that is out of scope, but if you're interested in that, let me know in the comments or on my social media.
 
-Now we'll be setting the system prompt. close the chat model node and double click the AI agent node. Here we'll need to set the System message option, which can be revealed by clicking add options>System message. The system prompt is best described as the personality of the AI. For this example we'll be using a simple yet effective prompt:
+Now we'll be setting the system prompt. Close the chat model node and double click the AI agent node. Here we'll need to set the System message option, which can be revealed by clicking add options>System message. The system prompt is best described as the personality of the AI. For this example we'll be using a simple yet effective prompt:
 
 ```text
 ## System Context
@@ -442,12 +448,12 @@ Provide exemplary butler services while occasionally weaving in relevant past ex
 
 I've added some clear examples in this prompt which will hopefully help you better understand how to set up your own system prompts. Writing good system prompts is THE most important part of building a good chatbot. There are a multitude of factors that influence the output so there is no 1 size fits all super prompt.
 
-Next we'll add some basic memory. Just use the **simple memory** node. This will save the last 5 interactions and add them to the context send to the chat model. This type of memory is NOT scalable since your token usage will blow through the roof if you up the limit, but for now it's ok.
+Next we'll add some basic memory. Just use the `simple memory` node. This will save the last 5 interactions and add them to the context send to the chat model. This type of memory is NOT scalable since your token usage will blow through the roof if you up the limit, but for now it's ok.
 
 And that's it! With just these 2 steps we've created a basic chatbot that can respond to our questions. You can test it by opening the chat panel in the bottom of your screen and typing a message.
 
-In the middle of the chat window we will see the flow that the workflow uses. In this case it'll our message to the agent, the agent will add the message to it's memory, process the message, add the response to the memory and then send it back to us, the user!
+In the middle of the chat window we will see the flow that the workflow uses. In this case it'll send our message to the agent, the agent will add the message to it's memory, process the message, add the response to the memory and then send it back to us, the user!
 
 Congratulations to us! We've just built our very own n8n server and chatbot! 🎉 If you liked this blog post, please let me know in the comments or on my social media. If you have any questions or suggestions for future posts, feel free to reach out as well. If you're super rich and/or a real G, consider supporting me on [kofi](https://ko-fi.com/oliverit)
 
-**Shoutout to all the amazing companies that make their software available for **FREE** for personal use. I am a great supporter of open source software and I think it's great that companies like n8n, docker, NGINX, OpenAI, Let's Encrypt and AWS provide free services for personal use. This allows us to experiment and learn without having to pay for expensive software or services.**
+**Shoutout to all the amazing companies that make their software available for **FREE** for personal use. I am a great supporter of open source software and I think it's great that companies like n8n, docker, NGINX, Let's Encrypt and AWS provide free services for personal use. This allows us to experiment and learn without having to pay for expensive software or services.**
