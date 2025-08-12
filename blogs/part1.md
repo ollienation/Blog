@@ -351,7 +351,7 @@ flowchart TD
     C --> F[Search Results]
     D --> G[Document Results]
 
-    F --> E
+    F --> E[Formatting]
     G --> E
 
     E --> H
@@ -384,7 +384,7 @@ flowchart TD
 
     %% Node Styling
     style A fill:#00FF00,stroke:#333,stroke-width:2px; %% Green
-    style B fill:#FFC0CB,stroke:#333,stroke-width:2px; %% Blue
+     style B fill:#FFC0CB,stroke:#333,stroke-width:2px; %% Blue
     style C fill:#00FF00,stroke:#333,stroke-width:2px; %% Green
 ```
 

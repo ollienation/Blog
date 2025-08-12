@@ -6,7 +6,7 @@ const matter = require("gray-matter");
 
 // Configuration
 const BLOGS_DIR = "./blogs";
-const OUTPUT_FILE = "./blogPosts.js";
+const OUTPUT_FILE = "./src/blogPosts.js";
 const WORDS_PER_MINUTE = 250;
 
 /**
@@ -38,7 +38,7 @@ function generateExcerpt(content, maxLength = 150) {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove links, keep text
     .replace(/``````/g, "") // Remove code blocks
     .replace(/`([^`]+)`/g, "$1") // Remove inline code
-    .replace(/---/g, "") // Remove horizontal rules
+    .replace(/---/g, '') // Remove horizontal rules
     .trim();
 
   if (!cleanContent) return "Click to read more...";
@@ -72,20 +72,7 @@ function extractTitle(content, filename) {
 
 function inferTags(content, filename) {
   const tags = new Set();
-  const techTerms = [
-    "javascript",
-    "react",
-    "node",
-    "aws",
-    "ai",
-    "tech",
-    "web",
-    "api",
-    "css",
-    "html",
-    "security",
-    "performance",
-  ];
+  const techTerms = ["javascript", "react", "node", "aws", "ai", "tech", "web", "api", "css", "html", "security", "performance"];
   const contentLower = content.toLowerCase();
 
   techTerms.forEach((term) => {
@@ -110,27 +97,16 @@ function processMarkdownFile(filePath, id) {
     const { data, content: mainContent } = matter(fileContent);
     const hasValidFrontmatter = data && Object.keys(data).length > 0;
 
-    const contentForExcerpt = mainContent
-      .replace(/^#\s+.+(\r\n|\n|\r)?/, "")
-      .trim();
+    const contentForExcerpt = mainContent.replace(/^#\s+.+(\r\n|\n|\r)?/, "").trim();
 
     const blogPost = {
       id,
-      title:
-        (hasValidFrontmatter && data.title) ||
-        extractTitle(mainContent, filename),
-      excerpt:
-        (hasValidFrontmatter && data.excerpt) ||
-        generateExcerpt(contentForExcerpt),
+      title: (hasValidFrontmatter && data.title) || extractTitle(mainContent, filename),
+      excerpt: (hasValidFrontmatter && data.excerpt) || generateExcerpt(contentForExcerpt),
       content: mainContent, // Full content for the modal view
-      date:
-        (hasValidFrontmatter && data.date) ||
-        stats.mtime.toISOString().split("T")[0],
-      readTime:
-        (hasValidFrontmatter && data.readTime) ||
-        calculateReadTime(mainContent),
-      tags:
-        (hasValidFrontmatter && data.tags) || inferTags(mainContent, filename),
+      date: (hasValidFrontmatter && data.date) || stats.mtime.toISOString().split("T")[0],
+      readTime: (hasValidFrontmatter && data.readTime) || calculateReadTime(mainContent),
+      tags: (hasValidFrontmatter && data.tags) || inferTags(mainContent, filename),
       author: (hasValidFrontmatter && data.author) || "Oliver",
     };
 
@@ -152,14 +128,10 @@ function buildBlogPosts() {
     process.exit(1);
   }
 
-  const files = fs
-    .readdirSync(BLOGS_DIR)
-    .filter((file) => file.endsWith(".md"));
+  const files = fs.readdirSync(BLOGS_DIR).filter((file) => file.endsWith(".md"));
 
   if (files.length === 0) {
-    console.warn(
-      `⚠️ No markdown files found in ${BLOGS_DIR}. Generating empty posts file.`,
-    );
+    console.warn(`⚠️ No markdown files found in ${BLOGS_DIR}. Generating empty posts file.`);
     fs.writeFileSync(OUTPUT_FILE, `export const blogPosts = [];`, "utf8");
     return;
   }

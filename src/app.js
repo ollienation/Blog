@@ -8,6 +8,88 @@ let markedInstance = null;
 let isMermaidInitialized = false;
 let focusableElements = [];
 
+/* --------------------- Library Loading ---------------------- */
+
+class LibraryLoader {
+  constructor() {
+    this.cache = new Map();
+    this.loadingPromises = new Map();
+  }
+
+  async loadDOMPurify() {
+    if (this.cache.has("dompurify")) {
+      return this.cache.get("dompurify");
+    }
+
+    if (this.loadingPromises.has("dompurify")) {
+      return this.loadingPromises.get("dompurify");
+    }
+
+    const loadPromise = import(
+      /* webpackChunkName: "dompurify" */
+      /* webpackPreload: true */
+      "dompurify"
+    ).then((module) => {
+      const instance = module.default;
+      this.cache.set("dompurify", instance);
+      this.loadingPromises.delete("dompurify");
+      return instance;
+    });
+
+    this.loadingPromises.set("dompurify", loadPromise);
+    return loadPromise;
+  }
+
+  async loadHighlightJS() {
+    if (this.cache.has("hljs")) {
+      return this.cache.get("hljs");
+    }
+
+    if (this.loadingPromises.has("hljs")) {
+      return this.loadingPromises.get("hljs");
+    }
+
+    const loadPromise = import(
+      /* webpackChunkName: "highlight-js" */
+      "highlight.js"
+    ).then((module) => {
+      const hljs = module.default;
+      this.cache.set("hljs", hljs);
+      this.loadingPromises.delete("hljs");
+      return hljs;
+    });
+
+    this.loadingPromises.set("hljs", loadPromise);
+    return loadPromise;
+  }
+
+  async loadMermaid() {
+    if (this.cache.has("mermaid")) {
+      return this.cache.get("mermaid");
+    }
+
+    if (this.loadingPromises.has("mermaid")) {
+      return this.loadingPromises.get("mermaid");
+    }
+
+    const loadPromise = import(
+      /* webpackChunkName: "mermaid" */
+      "mermaid"
+    ).then((module) => {
+      const mermaid = module.default;
+      this.cache.set("mermaid", mermaid);
+      this.loadingPromises.delete("mermaid");
+      return mermaid;
+    });
+
+    this.loadingPromises.set("mermaid", loadPromise);
+    return loadPromise;
+  }
+}
+
+// Global instance
+const libraryLoader = new LibraryLoader();
+
 /* ---------------------- Theme Switcher ---------------------- */
 function initTheme() {
   try {
@@ -210,6 +292,172 @@ function parseMarkdown(content) {
   }
 }
 
+function initModalHandlers() {
+  try {
+    const modal = document.getElementById("blogModal");
+    const modalClose = document.getElementById("modalClose");
+    const modalBackdrop = modal?.querySelector(".modal-backdrop");
+
+    // --- Focus Trapping Logic ---
+    const trapFocus = (e) => {
+      // This now correctly references the GLOBAL focusableElements array.
+      if (e.key !== "Tab" || focusableElements.length === 0) return;
+
+      const firstFocusableElement = focusableElements[0];
+      const lastFocusableElement =
+        focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstFocusableElement) {
+          lastFocusableElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastFocusableElement) {
+          firstFocusableElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    if (modalClose) {
+      modalClose.addEventListener("click", closeBlogModal);
+    }
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener("click", closeBlogModal);
+    }
+
+    // ESC key and Tab trapping
+    document.addEventListener("keydown", (e) => {
+      if (modal && !modal.classList.contains("hidden")) {
+        if (e.key === "Escape") {
+          closeBlogModal();
+        }
+        // Add focus trapping listener
+        trapFocus(e);
+      }
+    });
+    console.log("Modal handlers initialized");
+  } catch (error) {
+    console.error("Modal handlers initialization failed:", error);
+  }
+}
+
+async function renderMermaidDiagrams(container) {
+  const mermaidCodeBlocks = container.querySelectorAll("code.language-mermaid");
+
+  if (mermaidCodeBlocks.length === 0) {
+    return; // Exit early - no Mermaid needed
+  }
+
+  try {
+    // Only load Mermaid when diagrams are actually present
+    const mermaid = await libraryLoader.loadMermaid();
+
+    if (!isMermaidInitialized) {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: "neutral",
+        securityLevel: "strict",
+      });
+      isMermaidInitialized = true;
+    }
+
+    // Render diagrams with error handling per diagram
+    const renderPromises = Array.from(mermaidCodeBlocks).map(
+      async (codeElement, index) => {
+        const diagramId = `mermaid-diagram-${Date.now()}-${index}`;
+        const diagramDefinition = codeElement.textContent || "";
+        const parentPreElement = codeElement.parentElement;
+
+        try {
+          const { svg } = await mermaid.render(diagramId, diagramDefinition);
+
+          const diagramContainer = document.createElement("div");
+          diagramContainer.classList.add("mermaid-diagram-container");
+          diagramContainer.innerHTML = svg;
+
+          if (parentPreElement) {
+            parentPreElement.replaceWith(diagramContainer);
+          }
+        } catch (diagramError) {
+          console.error(`Mermaid diagram ${index} failed:`, diagramError);
+          if (parentPreElement) {
+            parentPreElement.innerHTML = `
+              <div style="color: var(--color-error); padding: 1rem; border: 1px solid var(--color-error); border-radius: var(--radius-base);">
+                ⚠️ Diagram rendering failed: ${diagramError.message}
+              </div>
+            `;
+          }
+        }
+      },
+    );
+
+    await Promise.all(renderPromises);
+    console.log(`Rendered ${mermaidCodeBlocks.length} Mermaid diagrams`);
+  } catch (error) {
+    console.error("Failed to load Mermaid library:", error);
+    // Graceful fallback - show original code blocks
+  }
+}
+function initScrollBehavior() {
+  try {
+    // Smooth scroll for navigation links
+    const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+
+    navLinks.forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute("href");
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      });
+    });
+
+    // Hero CTA buttons
+    const ctaButtons = document.querySelectorAll('.hero-cta a[href^="#"]');
+
+    ctaButtons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        const targetId = button.getAttribute("href");
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      });
+    });
+
+    // Hero scroll down arrow
+    const arrow = document.querySelector(".scroll-arrow");
+
+    if (arrow) {
+      arrow.addEventListener("click", (e) => {
+        e.preventDefault();
+        document
+          .getElementById("about")
+          .scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    console.log("Scroll behavior initialized");
+  } catch (error) {
+    console.error("Scroll behavior initialization failed:", error);
+  }
+}
+
 /* ---------------------- Blog Functionality ---------------------- */
 function renderBlogPosts() {
   try {
@@ -298,55 +546,62 @@ async function openBlogModal(post) {
 
   lastFocusedElement = document.activeElement;
   const modal = document.getElementById("blogModal");
-  const modalTitle = document.getElementById("modalTitle");
   const modalBody = document.getElementById("modalBody");
-  const modalMeta = document.getElementById("modalMeta");
 
-  if (modalTitle) modalTitle.textContent = post.title;
-  if (modalMeta) {
-    const authorSpan = document.createElement("span");
-    authorSpan.textContent = post.author;
-    const dateSpan = document.createElement("span");
-    dateSpan.textContent = formatDate(post.date);
-    const readTimeSpan = document.createElement("span");
-    readTimeSpan.textContent = post.readTime;
-    modalMeta.replaceChildren(authorSpan, dateSpan, readTimeSpan);
+  // Show loading state
+  if (modalBody) {
+    modalBody.innerHTML = `
+      <div style="text-align: center; padding: 2rem;">
+        <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid var(--color-border); border-radius: 50%; border-top-color: var(--color-primary); animation: spin 1s linear infinite;"></div>
+        <p style="margin-top: 1rem; color: var(--color-text-secondary);">Loading content...</p>
+      </div>
+    `;
   }
 
-  if (modalBody) {
-    const [marked, { default: DOMPurify }, { default: hljs }] =
-      await Promise.all([
-        getMarkedInstance(),
-        import("dompurify"),
-        import("highlight.js"),
-      ]);
+  try {
+    // Load libraries in parallel but only when needed
+    const [marked, DOMPurify, hljs] = await Promise.all([
+      getMarkedInstance(),
+      libraryLoader.loadDOMPurify(),
+      libraryLoader.loadHighlightJS(),
+    ]);
+
+    // Parse and sanitize content
     const dirtyHtml = marked.parse(post.content || "");
     const cleanHtml = DOMPurify.sanitize(dirtyHtml);
 
-    modalBody.innerHTML = cleanHtml;
+    if (modalBody) {
+      modalBody.innerHTML = cleanHtml;
 
-    modalBody
-      .querySelectorAll("pre code:not(.language-mermaid)")
-      .forEach((block) => {
-        hljs.highlightElement(block);
-      });
+      // Apply syntax highlighting to non-Mermaid code blocks
+      modalBody
+        .querySelectorAll("pre code:not(.language-mermaid)")
+        .forEach((block) => {
+          hljs.highlightElement(block);
+        });
 
-    await renderMermaidDiagrams(modalBody);
-    // -----------
-  }
+      // Load Mermaid only if diagrams are present
+      await renderMermaidDiagrams(modalBody);
+    }
 
-  // --- (The rest of the function for showing the modal and trapping focus remains the same) ---
-  if (modal) {
-    const focusableElementsSelector =
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    focusableElements = Array.from(
-      modal.querySelectorAll(focusableElementsSelector),
-    );
-    modal.classList.remove("hidden");
-    document.body.classList.add("modal-open");
-    const modalCloseButton = document.getElementById("modalClose");
-    if (modalCloseButton) {
-      modalCloseButton.focus();
+    // Show modal and handle focus
+    if (modal) {
+      modal.classList.remove("hidden");
+      document.body.classList.add("modal-open");
+
+      const modalCloseButton = document.getElementById("modalClose");
+      if (modalCloseButton) {
+        modalCloseButton.focus();
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load blog content:", error);
+    if (modalBody) {
+      modalBody.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: var(--color-error);">
+          <p>Failed to load content. Please try again.</p>
+        </div>
+      `;
     }
   }
 }
@@ -366,177 +621,6 @@ function closeBlogModal() {
     }
   } catch (error) {
     console.error("Modal closing failed:", error);
-  }
-}
-
-/* ---------------------- Utility Functions ---------------------- */
-function initModalHandlers() {
-  try {
-    const modal = document.getElementById("blogModal");
-    const modalClose = document.getElementById("modalClose");
-    const modalBackdrop = modal?.querySelector(".modal-backdrop");
-
-    // --- Focus Trapping Logic ---
-    const trapFocus = (e) => {
-      // This now correctly references the GLOBAL focusableElements array.
-      if (e.key !== "Tab" || focusableElements.length === 0) return;
-
-      const firstFocusableElement = focusableElements[0];
-      const lastFocusableElement =
-        focusableElements[focusableElements.length - 1];
-
-      if (e.shiftKey) {
-        // Shift + Tab
-        if (document.activeElement === firstFocusableElement) {
-          lastFocusableElement.focus();
-          e.preventDefault();
-        }
-      } else {
-        // Tab
-        if (document.activeElement === lastFocusableElement) {
-          firstFocusableElement.focus();
-          e.preventDefault();
-        }
-      }
-    };
-
-    if (modalClose) {
-      modalClose.addEventListener("click", closeBlogModal);
-    }
-    if (modalBackdrop) {
-      modalBackdrop.addEventListener("click", closeBlogModal);
-    }
-
-    // ESC key and Tab trapping
-    document.addEventListener("keydown", (e) => {
-      if (modal && !modal.classList.contains("hidden")) {
-        if (e.key === "Escape") {
-          closeBlogModal();
-        }
-        // Add focus trapping listener
-        trapFocus(e);
-      }
-    });
-    console.log("Modal handlers initialized");
-  } catch (error) {
-    console.error("Modal handlers initialization failed:", error);
-  }
-}
-
-async function renderMermaidDiagrams(container) {
-  // Find all code blocks marked with the 'mermaid' language by the 'marked' parser.
-  const mermaidCodeBlocks = container.querySelectorAll("code.language-mermaid");
-
-  if (mermaidCodeBlocks.length === 0) {
-    return; // Exit early if there are no diagrams to render.
-  }
-
-  try {
-    const { default: mermaid } = await import("mermaid");
-
-    if (!isMermaidInitialized) {
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: "neutral", // A good base theme for light/dark modes
-        securityLevel: "strict", // Recommended for security
-      });
-      isMermaidInitialized = true;
-      console.log("Mermaid.js dynamically initialized.");
-    }
-
-    // Process each Mermaid block individually and asynchronously.
-    const renderPromises = Array.from(mermaidCodeBlocks).map(
-      async (codeElement, index) => {
-        const diagramId = `mermaid-diagram-${Date.now()}-${index}`;
-        const diagramDefinition = codeElement.textContent || "";
-        const parentPreElement = codeElement.parentElement; // The <pre> tag wrapping the code block
-
-        try {
-          // Use the Mermaid API to render the diagram definition into SVG markup.
-          const { svg } = await mermaid.render(diagramId, diagramDefinition);
-
-          // Create a styled container for the diagram.
-          const diagramContainer = document.createElement("div");
-          diagramContainer.classList.add("mermaid-diagram-container");
-          diagramContainer.innerHTML = svg;
-
-          // Replace the original <pre> block with the rendered SVG container.
-          if (parentPreElement) {
-            parentPreElement.replaceWith(diagramContainer);
-          }
-        } catch (error) {
-          console.error(`Failed to render Mermaid diagram ${index}:`, error);
-          // Optionally display an error message in the UI.
-          if (parentPreElement) {
-            parentPreElement.innerHTML = "Error: Failed to render diagram.";
-            parentPreElement.style.color = "red";
-          }
-        }
-      },
-    );
-
-    await Promise.all(renderPromises);
-    console.log(
-      `Processed and rendered ${mermaidCodeBlocks.length} Mermaid diagram(s).`,
-    );
-  } catch (error) {
-    console.error("Failed to load or run Mermaid.js:", error);
-  }
-}
-
-function initScrollBehavior() {
-  try {
-    // Smooth scroll for navigation links
-    const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
-
-    navLinks.forEach((link) => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        const targetId = link.getAttribute("href");
-        const targetElement = document.querySelector(targetId);
-
-        if (targetElement) {
-          targetElement.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
-      });
-    });
-
-    // Hero CTA buttons
-    const ctaButtons = document.querySelectorAll('.hero-cta a[href^="#"]');
-
-    ctaButtons.forEach((button) => {
-      button.addEventListener("click", (e) => {
-        e.preventDefault();
-        const targetId = button.getAttribute("href");
-        const targetElement = document.querySelector(targetId);
-
-        if (targetElement) {
-          targetElement.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
-      });
-    });
-
-    // Hero scroll down arrow
-    const arrow = document.querySelector(".scroll-arrow");
-
-    if (arrow) {
-      arrow.addEventListener("click", (e) => {
-        e.preventDefault();
-        document
-          .getElementById("about")
-          .scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-
-    console.log("Scroll behavior initialized");
-  } catch (error) {
-    console.error("Scroll behavior initialization failed:", error);
   }
 }
 
