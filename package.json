@@ -1,6 +1,6 @@
 {
   "name": "dynamic-markdown-blog",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Dynamic markdown blog with AWS Amplify integration",
   "main": "index.html",
   "scripts": {
