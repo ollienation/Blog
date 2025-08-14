@@ -1,4 +1,4 @@
-import { blogPosts } from "./blogPosts.js";
+import { blogPosts } from "@assets/blogPosts.ts";
 
 /* ---------------------- Global State ---------------------- */
 let currentTheme = "light";
@@ -242,16 +242,13 @@ function formatDate(dateString) {
  * @returns {Promise<object>} The configured marked instance.
  */
 async function getMarkedInstance() {
-  // If the instance already exists, return it immediately.
   if (markedInstance) {
     return markedInstance;
   }
-
   try {
-    // Dynamically import the library.
     const { marked } = await import("marked");
-
-    if (window.hljs) {
+    const hljs = await libraryLoader.loadHighlightJS(); // Direct modular reference
+    if (hljs) {
       marked.setOptions({
         highlight: function (code, lang) {
           const language = hljs.getLanguage(lang) ? lang : "plaintext";
@@ -266,29 +263,11 @@ async function getMarkedInstance() {
         "highlight.js not found; syntax highlighting will be disabled.",
       );
     }
-
-    // Save the configured instance for future use.
     markedInstance = marked;
     return markedInstance;
   } catch (error) {
     console.error("Failed to load or configure marked.js:", error);
-    // Return a fallback object to prevent the site from crashing.
     return { parse: (content) => content };
-  }
-}
-
-function parseMarkdown(content) {
-  try {
-    // Convert Markdown to HTML
-    const dirtyHtml = marked.parse(content || "");
-
-    // Sanitize the generated HTML
-    const cleanHtml = DOMPurify.sanitize(dirtyHtml);
-
-    return cleanHtml;
-  } catch (error) {
-    console.error("Markdown parsing failed:", error);
-    return content;
   }
 }
 

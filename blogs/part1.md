@@ -358,13 +358,13 @@ flowchart TD
     H --> I[User]
 
     %% Node Styling
-    style B fill:#0000FF,stroke:#333,stroke-width:2px; %% Blue
-    style H fill:#0000FF,stroke:#333,stroke-width:2px; %% Blue
-    style C fill:#FFC0CB,stroke:#333,stroke-width:2px; %% Pink
-    style D fill:#FFC0CB,stroke:#333,stroke-width:2px; %% Pink
-    style E fill:#BFC0CB,stroke:#333,stroke-width:2px; %% Pink
-    style A fill:#00FF00,stroke:#333,stroke-width:2px; %% Green
-    style I fill:#00FF00,stroke:#333,stroke-width:2px; %% Green
+    style B fill:#0000FF
+    style H fill:#0000FF
+    style C fill:#FFC0CB
+    style D fill:#FFC0CB
+    style E fill:#BFC0CB
+    style A fill:#00FF00
+    style I fill:#00FF00
 
 ```
 
@@ -383,9 +383,9 @@ flowchart TD
     B --> C[User]
 
     %% Node Styling
-    style A fill:#00FF00,stroke:#333,stroke-width:2px; %% Green
-     style B fill:#FFC0CB,stroke:#333,stroke-width:2px; %% Blue
-    style C fill:#00FF00,stroke:#333,stroke-width:2px; %% Green
+    style A fill:#00FF00
+    style B fill:#0000FF
+    style C fill:#00FF00
 ```
 
 The first node we're going to add is the input node. This node will receive the users question. We'll select the "When message received" trigger node. Pressing this will open up a window in which we have some settings which we can ignore for now. Pressing back to canvas in the top left will bring us back to the canvas.

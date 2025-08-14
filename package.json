@@ -4,7 +4,7 @@
   "description": "Dynamic markdown blog with AWS Amplify integration",
   "main": "index.html",
   "scripts": {
-    "build": "node build-markdown.js && vite build",
+    "build": "node ./src/build-markdown.js && vite build",
     "dev": "vite",
     "preview": "vite preview",
     "test": "echo \"No tests specified\" && exit 0",
