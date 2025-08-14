@@ -1,20 +1,19 @@
-version: 1.1
+version: 1.2
+
 frontend:
   phases:
     preBuild:
       commands:
-        # Install all dependencies from package-lock.json
+        - nvm install 22
+        - nvm use 22
         - npm ci
     build:
       commands:
-        # Run the complete build process defined in package.json
         - npm run build
   artifacts:
-    # Point to the correct output directory
     baseDirectory: dist
     files:
       - "**/*"
   cache:
     paths:
-      # Cache modules for faster subsequent builds
       - node_modules/**/*
