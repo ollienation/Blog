@@ -2,6 +2,10 @@ Attribution-ShareAlike 4.0 International
 
 =======================================================================
 
+This is not applicable for the font used in the blog project!
+
+=======================================================================
+
 Creative Commons Corporation ("Creative Commons") is not a law firm and
 does not provide legal services or legal advice. Distribution of
 Creative Commons public licenses does not create a lawyer-client or

@@ -194,6 +194,7 @@ This project stands on the shoulders of giants:
 - **[Highlight.js](https://highlightjs.org/)** - Syntax highlighting
 - **[Mermaid](https://mermaid.js.org/)** - Diagram generation
 - **[DOMPurify](https://github.com/cure53/DOMPurify)** - HTML sanitization
+- **[FK Grotesk](https://fonts.floriankarsten.com/fk-grotesk)** - Amazing font by Florian Karsten
 
 ## 📄 License
 
@@ -202,7 +203,7 @@ This project is licensed under the [Creative Commons Attribution-ShareAlike 4.0 
 **What this means:**
 
 - ✅ You can use, share, and adapt this work
-- ✅ Commercial use is allowed
+- ✅ Commercial use is allowed, without the font!
 - ⚠️ You must provide attribution
 - ⚠️ Derivative works must use the same license
 
@@ -221,4 +222,3 @@ This project is licensed under the [Creative Commons Attribution-ShareAlike 4.0 
 _Last updated: August 2025_
 
 </div>
-
