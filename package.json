@@ -4,18 +4,23 @@
   "description": "Dynamic markdown blog with AWS Amplify integration",
   "main": "index.html",
   "scripts": {
-    "build": "node ./src/build-markdown.js && vite build",
-    "dev": "vite",
+    "build": "tsc --noEmit && npm run build:markdown && vite build",
+    "build:markdown": "tsx src/build-markdown.ts",
+    "dev": "npm run build:markdown && vite",
     "preview": "vite preview",
-    "test": "echo \"No tests specified\" && exit 0",
-    "security": "npm audit --audit-level moderate",
-    "analyze": "source-map-explorer dist/*.js"
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "tsc": "tsc --noEmit --pretty -p tsconfig.json",
+    "tsc:watch": "tsc --noEmit --pretty --watch -p tsconfig.json"
   },
   "dependencies": {
     "dompurify": "^3.2.6",
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.11.1",
     "marked": "^16.1.2",
+    "marked-highlight": "^2.2.2",
     "mermaid": "^11.9.0"
   },
   "keywords": [
@@ -28,10 +33,15 @@
   "license": "CC-BY-SA-4.0",
   "devDependencies": {
     "@types/node": "^24.2.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
     "copyfiles": "^2.4.1",
     "esbuild": "^0.25.8",
+    "jsdom": "^26.1.0",
     "source-map-explorer": "^2.5.3",
+    "tsx": "^4.20.4",
     "typescript": "^5.9.2",
-    "vite": "^7.1.2"
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4"
   }
 }

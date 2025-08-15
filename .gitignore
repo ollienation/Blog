@@ -1,9 +1,10 @@
 .dev/
 node_modules
-blogPosts.js
+src/assets/blogPosts.ts
 blogs/sample-blog-post.md
 amplify/
 .amplify
 amplify_outputs*
 amplifyconfiguration*
 dist/
+

@@ -25,10 +25,16 @@
       content="geolocation=(), microphone=(), camera=()"
     />
     <title>Oliver's Personal Blog</title>
+
+    <!-- Preload critical resources -->
     <link rel="preload" href="./src/styles/style.css" as="style" />
-    <link rel="modulepreload" href="./src/app.js" />
+    <link rel="modulepreload" href="./src/app.ts" />
+
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="./src/styles/style.css" />
     <link rel="stylesheet" href="./src/styles/highlight-theme.css" />
+
+    <!-- DNS prefetch for external resources -->
     <link rel="dns-prefetch" href="//github.com" />
   </head>
   <body>
@@ -159,6 +165,7 @@
               <div class="skill-tag">AWS</div>
               <div class="skill-tag">Python</div>
               <div class="skill-tag">JavaScript</div>
+              <div class="skill-tag">TypeScript</div>
               <div class="skill-tag">Docker</div>
               <div class="skill-tag">Security</div>
             </div>
@@ -283,6 +290,8 @@
         </p>
       </div>
     </footer>
-    <script type="module" src="./src/app.js" defer></script>
+
+    <!-- Load the TypeScript application -->
+    <script type="module" src="./src/app.ts" defer></script>
   </body>
 </html>
